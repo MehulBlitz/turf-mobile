@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, CheckCircle2, AlertCircle, QrCode as QrCodeIcon, Camera, Image as ImageIcon } from 'lucide-react';
 import { capturePhoto, pickPhotoFromGallery } from '../lib/capacitorPlugins';
+import { fetchBookingById, fetchBookingByQrToken, supabase } from '../lib/supabase';
+import { formatCurrency } from '../lib/utils';
 import jsQR from 'jsqr';
 
 export default function QRScanner({ onClose }) {
@@ -12,7 +14,7 @@ export default function QRScanner({ onClose }) {
   const scanQRFromPhoto = (photoUrl) => {
     return new Promise((resolve) => {
       const img = new window.Image();
-      img.onload = () => {
+      img.onload = async () => {
         try {
           // Create canvas and draw image
           const canvas = document.createElement('canvas');
@@ -28,14 +30,43 @@ export default function QRScanner({ onClose }) {
           const code = jsQR(imageData.data, imageData.width, imageData.height);
 
           if (code) {
+            const rawData = code.data;
+            let parsed = null;
             try {
-              const data = JSON.parse(code.data);
-              setScannedData(data);
+              parsed = JSON.parse(rawData);
             } catch {
+              parsed = null;
+            }
+
+            if (parsed?.qrToken || parsed?.bookingId) {
+              const booking = parsed.qrToken
+                ? await fetchBookingByQrToken(parsed.qrToken)
+                : await fetchBookingById(parsed.bookingId);
+
+              if (booking) {
+                const currentUser = await supabase.auth.getUser();
+                const ownsTicket = currentUser?.data?.user?.id === booking.user_id;
+
+                setScannedData({
+                  id: booking.id,
+                  turf: booking.turfs?.name,
+                  date: booking.start_time,
+                  time: `${new Date(booking.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(booking.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+                  amount: booking.total_price,
+                  status: booking.status,
+                  ownsTicket,
+                  raw: rawData,
+                });
+              } else {
+                setError('This ticket could not be found or is not accessible from this account.');
+              }
+            } else if (rawData) {
               setScannedData({
-                raw: code.data,
-                id: code.data.substring(0, 8),
+                raw: rawData,
+                id: rawData.substring(0, 8),
               });
+            } else {
+              setError('No QR code found in image. Try again with a clearer photo.');
             }
           } else {
             setError('No QR code found in image. Try again with a clearer photo.');
@@ -247,10 +278,18 @@ export default function QRScanner({ onClose }) {
                   {scannedData.amount && (
                     <div className="bg-emerald-50 rounded-xl p-4 border-2 border-emerald-200">
                       <p className="text-[10px] font-black text-emerald-600 uppercase mb-1">Amount</p>
-                      <p className="text-2xl font-black text-emerald-600">₹{Math.round(scannedData.amount)}</p>
+                      <p className="text-2xl font-black text-emerald-600">{formatCurrency(scannedData.amount)}</p>
                     </div>
                   )}
                 </div>
+
+                {typeof scannedData.ownsTicket === 'boolean' && (
+                  <div className={`rounded-xl p-4 text-sm font-bold ${scannedData.ownsTicket ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-yellow-50 border border-amber-200 text-amber-800'}`}>
+                    {scannedData.ownsTicket
+                      ? 'This ticket is linked to your account.'
+                      : 'This ticket belongs to a different account. Please sign in with the correct user if needed.'}
+                  </div>
+                )}
 
                 {scannedData.raw && (
                   <div className="bg-orange-50 rounded-xl p-3 border border-orange-200">

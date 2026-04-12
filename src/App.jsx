@@ -25,7 +25,7 @@ import {
   MessageCircle
 } from 'lucide-react';
 import { cn, formatCurrency } from './lib/utils';
-import { supabase, isSupabaseConfigured } from './lib/supabase';
+import { supabase, isSupabaseConfigured, createBookingWithTicket, fetchBookingById } from './lib/supabase';
 import AuthScreen from './components/AuthScreen';
 import OwnerDashboard from './components/OwnerDashboard';
 import AdminDashboard from './components/AdminDashboard';
@@ -666,16 +666,14 @@ export default function App() {
         return alert('This slot was just booked by someone else. Please choose another one.');
       }
 
-      const { data, error } = await supabase.from('bookings').insert([{
+      const data = await createBookingWithTicket({
         turf_id: selectedTurf.id,
         user_id: session.user.id,
         start_time: startTime.toISOString(),
         end_time: endTime.toISOString(),
         total_price: parseFloat(selectedSlot.price),
         status: 'confirmed' // Set to confirmed directly as requested
-      }]).select().single();
-
-      if (error) throw error;
+      });
 
       setShowTicket({
         ...data,

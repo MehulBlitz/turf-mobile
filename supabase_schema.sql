@@ -37,6 +37,7 @@ create table if not exists bookings (
   id uuid default gen_random_uuid() primary key,
   turf_id uuid references turfs(id) on delete cascade,
   user_id uuid references profiles(id) on delete cascade, -- Changed to reference profiles(id) for easier joining
+  qr_token text unique not null default gen_random_uuid(),
   start_time timestamp with time zone not null,
   end_time timestamp with time zone not null,
   total_price numeric not null,
@@ -120,11 +121,13 @@ create policy "Admins can view all bookings" on bookings for select using (
 );
 
 -- Policies for turf feedback
+drop policy if exists "Feedback is viewable by everyone" on turf_feedback;
 create policy "Feedback is viewable by everyone" on turf_feedback for select using (true);
 drop policy if exists "Users can add feedback" on turf_feedback;
 create policy "Users can add feedback" on turf_feedback for insert with check (auth.uid() = author_id);
 
 -- Policies for turf comments
+drop policy if exists "Comments are viewable by everyone" on turf_comments;
 create policy "Comments are viewable by everyone" on turf_comments for select using (true);
 drop policy if exists "Users can add comments" on turf_comments;
 create policy "Users can add comments" on turf_comments for insert with check (auth.uid() = author_id);
@@ -186,6 +189,10 @@ begin
 
   if not exists (select 1 from information_schema.columns where table_name='bookings' and column_name='refund_amount') then
     alter table bookings add column refund_amount numeric default 0;
+  end if;
+
+  if not exists (select 1 from information_schema.columns where table_name='bookings' and column_name='qr_token') then
+    alter table bookings add column qr_token text unique not null default gen_random_uuid();
   end if;
 
   -- Update turfs type constraint

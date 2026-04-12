@@ -83,3 +83,47 @@ export const fetchTurfRatingSummary = async (turfId) => {
   return { average, count };
 };
 
+const generateQrToken = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `qr_${Math.random().toString(36).slice(2)}_${Date.now()}`;
+};
+
+export const createBookingWithTicket = async (bookingData) => {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
+  const payload = {
+    ...bookingData,
+    qr_token: generateQrToken(),
+  };
+  const { data, error } = await supabase
+    .from('bookings')
+    .insert(payload)
+    .select()
+    .single();
+  handleError(error);
+  return data;
+};
+
+export const fetchBookingByQrToken = async (token) => {
+  if (!token || !isSupabaseConfigured) return null;
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*, turfs(*)')
+    .eq('qr_token', token)
+    .single();
+  handleError(error);
+  return data;
+};
+
+export const fetchBookingById = async (bookingId) => {
+  if (!bookingId || !isSupabaseConfigured) return null;
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*, turfs(*)')
+    .eq('id', bookingId)
+    .single();
+  handleError(error);
+  return data;
+};
+

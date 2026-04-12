@@ -206,20 +206,26 @@ Book your next game on TurfBook! 🏟️
             </button>
 
             {showQR && (
-              <div className="bg-zinc-50 rounded-xl border-2 border-dashed border-zinc-200 p-4 flex items-center justify-center">
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-                    JSON.stringify({
-                      id: showTicket.id,
-                      turf: showTicket.turf.name,
-                      date: showTicket.date,
-                      time: `${showTicket.slot.start}-${showTicket.slot.end}`,
-                      amount: showTicket.total_price,
-                    })
-                  )}`}
-                  alt="QR Code"
-                  className="w-48 h-48"
-                />
+              <div className="space-y-3">
+                <div className="bg-zinc-50 rounded-xl border-2 border-dashed border-zinc-200 p-4 flex items-center justify-center">
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                      JSON.stringify({
+                        bookingId: showTicket.id,
+                        qrToken: showTicket.qr_token,
+                        turf: showTicket.turf.name,
+                        date: showTicket.date,
+                        time: `${showTicket.slot.start}-${showTicket.slot.end}`,
+                        amount: showTicket.total_price,
+                      })
+                    )}`}
+                    alt="QR Code"
+                    className="w-48 h-48"
+                  />
+                </div>
+                <p className="text-center text-xs text-zinc-500">
+                  Scan this QR code in the app on another device to load the same ticket from Supabase.
+                </p>
               </div>
             )}
             {!showQR && (
