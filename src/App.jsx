@@ -936,13 +936,7 @@ export default function App() {
             <h2 className="text-xl font-display font-bold text-zinc-900">My Profile</h2>
           </header>
           <div className="p-8 flex flex-col items-center justify-center text-center">
-            {!isFirebaseConfigured && (
-              <div className="mb-6 w-full rounded-3xl bg-orange-50 border border-orange-100 p-4 text-orange-700 text-sm shadow-sm">
-                <p className="font-bold">Firebase profile uploads are disabled.</p>
-                <p>Profile photos and realtime Firebase profile syncing require Firebase config. The rest of the app still works with Supabase.</p>
-              </div>
-            )}
-            <div className="w-24 h-24 rounded-full bg-emerald-100 mb-4 overflow-hidden border-4 border-white shadow-lg">
+              <div className="w-24 h-24 rounded-full bg-emerald-100 mb-4 overflow-hidden border-4 border-white shadow-lg">
               <img src={profilePhotoPreview || firebaseProfile?.avatar_url || profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.full_name || profile?.email}` } alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             </div>
             <h2 className="text-2xl font-bold text-zinc-900">{firebaseProfile?.full_name || profile?.full_name}</h2>
@@ -1436,27 +1430,62 @@ export default function App() {
   if (isDesktopViewport) {
     return (
       <div className="min-h-screen bg-zinc-950 text-white font-sans flex items-center justify-center p-6">
-        <div className="max-w-2xl w-full rounded-[2rem] border border-white/10 bg-zinc-900/95 p-8 shadow-2xl shadow-black/30">
-          <div className="flex flex-col gap-6">
-            <div className="text-center">
-              <p className="text-sm uppercase tracking-[0.35em] text-emerald-400 font-bold mb-3">Mobile-first experience</p>
-              <h1 className="text-3xl sm:text-4xl font-bold text-white">This app is optimized for mobile and Android only</h1>
-            </div>
-            <p className="text-zinc-300 leading-relaxed text-sm sm:text-base">
-              The current desktop or PC browser viewport is not supported yet. For the best experience, open the Turf Booking app on a phone or install the Android version.
-            </p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-3xl bg-white/5 border border-white/10 p-4">
-                <h2 className="text-sm font-semibold text-emerald-300 mb-2">Use mobile browser</h2>
-                <p className="text-zinc-400 text-sm">Open this site on a phone in portrait mode for the intended layout.</p>
+        <div className="max-w-4xl w-full rounded-[2rem] border border-white/10 bg-zinc-900/95 p-10 shadow-2xl shadow-black/40">
+          <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="space-y-6">
+              <div>
+                <p className="text-sm uppercase tracking-[0.35em] text-emerald-400 font-bold mb-3">Turf Mobile</p>
+                <h1 className="text-4xl sm:text-5xl font-display font-bold text-white">Built for mobile booking and Android deployment</h1>
               </div>
-              <div className="rounded-3xl bg-white/5 border border-white/10 p-4">
-                <h2 className="text-sm font-semibold text-emerald-300 mb-2">Android app</h2>
-                <p className="text-zinc-400 text-sm">Android app users should continue using the installed Capacitor app for the best experience.</p>
+              <p className="text-zinc-300 leading-relaxed text-base sm:text-lg">
+                Turf Mobile is a mobile-first booking experience. This desktop browser view is intentionally simplified while we keep the main user flow optimized for phones and the Android Capacitor app.
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5">
+                  <h2 className="text-sm font-semibold text-emerald-300 mb-2">Mobile-first design</h2>
+                  <p className="text-zinc-400 text-sm">Best experience on portrait mobile screens with touch-friendly booking flows.</p>
+                </div>
+                <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5">
+                  <h2 className="text-sm font-semibold text-emerald-300 mb-2">Android app ready</h2>
+                  <p className="text-zinc-400 text-sm">Use the Android build for offline-friendly turf search, booking, and owner management.</p>
+                </div>
+              </div>
+              <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5">
+                <h2 className="text-sm font-semibold text-emerald-300 mb-2">What works here</h2>
+                <ul className="space-y-2 text-zinc-400 text-sm list-disc list-inside">
+                  <li>Explore available turfs</li>
+                  <li>Review pricing, ratings, and feedback</li>
+                  <li>Learn about phone-first booking flow</li>
+                </ul>
               </div>
             </div>
-            <div className="rounded-3xl bg-white/5 border border-white/10 p-4">
-              <p className="text-zinc-400 text-sm">This desktop view is intentionally limited for now. For the best experience, open the app on a mobile phone or install the Android app. Full desktop support will be added later.</p>
+            <div className="rounded-[2rem] border border-white/10 bg-zinc-950/80 p-8 shadow-inner shadow-black/20">
+              <div className="mb-6 rounded-[1.75rem] bg-zinc-900/80 p-6 border border-white/5">
+                <h2 className="text-xl font-semibold text-white mb-3">Get the Android app</h2>
+                <p className="text-zinc-400 text-sm leading-relaxed mb-6">
+                  Install the Android version for the full Turf Mobile experience, including camera, location, booking, and notifications.
+                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 rounded-3xl bg-zinc-900/70 border border-white/5 p-4">
+                    <Wifi size={20} className="text-emerald-400" />
+                    <span className="text-sm text-zinc-300">Fast native booking performance</span>
+                  </div>
+                  <div className="flex items-center gap-3 rounded-3xl bg-zinc-900/70 border border-white/5 p-4">
+                    <CalendarDays size={20} className="text-emerald-400" />
+                    <span className="text-sm text-zinc-300">Live slot availability</span>
+                  </div>
+                  <div className="flex items-center gap-3 rounded-3xl bg-zinc-900/70 border border-white/5 p-4">
+                    <Users size={20} className="text-emerald-400" />
+                    <span className="text-sm text-zinc-300">Owner & admin dashboards</span>
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-[1.75rem] border border-emerald-500/20 bg-emerald-500/5 p-5">
+                <h3 className="text-sm uppercase tracking-[0.25em] text-emerald-300 font-semibold mb-2">Tip</h3>
+                <p className="text-zinc-300 text-sm leading-relaxed">
+                  If you want to try the native workflow, deploy the Android build from GitHub Releases or use `npm run android:debug` locally with a connected device.
+                </p>
+              </div>
             </div>
           </div>
         </div>
