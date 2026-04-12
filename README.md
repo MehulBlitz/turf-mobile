@@ -2,52 +2,52 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# Turf Mobile
 
-This contains everything you need to run your app locally.
+Mobile-first web app and Capacitor Android wrapper for booking turf grounds.
 
-View your app in AI Studio: https://ai.studio/apps/6f28abe0-faa6-4ef2-a112-1850b8ac32c0
+## GitHub Actions
+
+This repository includes a CI workflow at `.github/workflows/ci.yml` that runs on `push` and `pull_request` to `main`.
+It installs dependencies, lints the code, and builds the production app.
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
+**Prerequisites:** Node.js 20+, npm
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+2. Run the app:
    `npm run dev`
+3. Open `http://localhost:3000`
 
-## Firebase Hosting
+## Android / Capacitor
 
-1. Install the Firebase CLI if needed:
-   `npm install -g firebase-tools`
-2. Initialize Firebase hosting once:
-   `npx firebase init hosting`
-   - Use `dist` as the public directory
-   - Configure as a single-page app
-3. Set your Firebase project ID in `.firebaserc`.
-4. Authenticate with Firebase:
-   `npm run firebase:login`
-5. For local non-interactive deployment, set a Firebase CI token:
-   `set FIREBASE_TOKEN=your_token` on PowerShell or `export FIREBASE_TOKEN=your_token` on bash
-6. Deploy using the token:
-   `npm run firebase:deploy:ci`
+1. Build web assets and sync Android:
+   `npm run android:build`
+2. Build debug APK:
+   `npm run android:debug`
+3. Install on a connected device:
+   `npm run android:install`
 
-## Service account deployment (Google Application Credentials)
+## Web deployment
 
-1. In the Google Cloud console, create a service account for the project `turf-booking-171bf`.
-2. Grant it the following roles:
-   - `Firebase Hosting Admin`
-   - `Firebase Admin`
-   - `Storage Admin`
-   - `Cloud Firestore Admin` or `Firebase Rules Admin`
-   - `Service Usage Consumer` (required so the CLI can verify that Firebase Storage / Firestore APIs are enabled)
-3. Download the JSON key file.
-4. Set the environment variable:
-   - PowerShell: `$env:GOOGLE_APPLICATION_CREDENTIALS="C:\path\to\service-account.json"`
-   - Bash: `export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account.json"`
-5. Deploy using:
-   `npm run firebase:deploy:sa`
+This app is configured for Firebase Hosting in `firebase.json`.
 
-The generated `firebase.json` is configured to serve the Vite `dist/` output and rewrite all routes to `index.html` for SPA support.
+To deploy the current build to Firebase Hosting:
+
+```bash
+npm run firebase:deploy
+```
+
+If you need service account deployment:
+
+```bash
+npm run firebase:deploy:sa
+```
+
+## Notes
+
+- The app is currently optimized for mobile and Android; desktop viewport support is intentionally limited.
+- If you want to enable desktop support later, update `src/App.jsx` and add responsive layouts.
+- Make sure `.env.local` contains your Supabase keys for local development.

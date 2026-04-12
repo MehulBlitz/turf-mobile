@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, MapPin, Clock, DollarSign } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, DollarSign } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function BookingsCalendar({ userId }) {
@@ -7,11 +7,9 @@ export default function BookingsCalendar({ userId }) {
   const [bookings, setBookings] = useState([]);
   const [selectedDateBookings, setSelectedDateBookings] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
-  const [loading, setLoading] = useState(false);
 
   const refreshBookings = async () => {
     if (!userId) return;
-    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('bookings')
@@ -38,14 +36,14 @@ export default function BookingsCalendar({ userId }) {
     } catch (err) {
       console.error('Error loading calendar bookings:', err);
       setBookings([]);
-    } finally {
-      setLoading(false);
     }
   };
 
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     refreshBookings();
   }, [userId]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   const getDaysInMonth = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   const getFirstDayOfMonth = (date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();

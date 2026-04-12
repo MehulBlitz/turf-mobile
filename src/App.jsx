@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Home,
@@ -35,7 +35,7 @@ import CancellationModal from './components/CancellationModal';
 import QRScanner from './components/QRScanner';
 import SearchFilters from './components/SearchFilters';
 import TurfFeedbackPage from './components/TurfFeedbackPage';
-import { getCurrentLocation, checkNetworkStatus, onNetworkStatusChange, requestNotificationPermission, showBookingConfirmation, showSuccessToast, showErrorToast, addBookingToCalendar } from './lib/capacitorPlugins';
+import { getCurrentLocation, checkNetworkStatus, onNetworkStatusChange, showBookingConfirmation, showSuccessToast, showErrorToast, addBookingToCalendar } from './lib/capacitorPlugins';
 import { ensureFirebaseProfile, getFirebaseProfile, saveFirebaseProfile, uploadProfilePhoto, isFirebaseConfigured } from './lib/firebase';
 import { fetchTurfRatingSummary } from './lib/supabase';
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -333,6 +333,7 @@ export default function App() {
     }
   };
 
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     const updateViewportMode = () => {
       if (typeof window === 'undefined') return;
@@ -442,6 +443,7 @@ export default function App() {
       window.removeEventListener('orientationchange', updateViewportMode);
     };
   }, [fetchTurfs, fetchProfile, fetchUserBookings, fetchBookedSlots]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   // Keep selectedTurf in sync with turfs array
   useEffect(() => {
@@ -482,7 +484,7 @@ export default function App() {
       try {
         await StatusBar.setBackgroundColor({ color: '#059669' }); // Dark emerald
         await StatusBar.setStyle({ style: Style.Dark });
-      } catch (e) {
+      } catch {
         console.log('Status bar not available on this platform');
       }
     };

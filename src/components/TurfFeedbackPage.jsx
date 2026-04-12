@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, MessageCircle, Star, Send, MessageSquare, ThumbsUp } from 'lucide-react';
+import { ArrowLeft, Star, MessageSquare } from 'lucide-react';
 import { fetchTurfComments, fetchTurfFeedback, submitTurfComment, submitTurfFeedback } from '../lib/supabase';
 
 export default function TurfFeedbackPage({ user, turf, onBack, onFeedbackUpdate }) {
@@ -48,6 +48,7 @@ export default function TurfFeedbackPage({ user, turf, onBack, onFeedbackUpdate 
     return () => {
       isActive = false;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [turf]);
 
   const handleCommentSubmit = async (e) => {

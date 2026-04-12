@@ -11,7 +11,7 @@ export default function QRScanner({ onClose }) {
 
   const scanQRFromPhoto = (photoUrl) => {
     return new Promise((resolve) => {
-      const img = new Image();
+      const img = new window.Image();
       img.onload = () => {
         try {
           // Create canvas and draw image
@@ -31,7 +31,7 @@ export default function QRScanner({ onClose }) {
             try {
               const data = JSON.parse(code.data);
               setScannedData(data);
-            } catch (e) {
+            } catch {
               setScannedData({
                 raw: code.data,
                 id: code.data.substring(0, 8),

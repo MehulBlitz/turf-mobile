@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, CheckCircle2, Share2, Download, Copy, QrCode } from 'lucide-react';
-import { cn, formatCurrency } from '../lib/utils';
+import { formatCurrency } from '../lib/utils';
 import jsPDF from 'jspdf';
 
 export default function TicketModal({ showTicket, onClose }) {

@@ -117,7 +117,7 @@ export default function OwnerDashboard({ user, onTurfUpdate }) {
   const [blockEnd, setBlockEnd] = useState('07:00');
   const [blockReason, setBlockReason] = useState('');
   const [selectedCancelBooking, setSelectedCancelBooking] = useState(null);
-  const [cancelProcessing, setCancelProcessing] = useState(false);
+  const [, setCancelProcessing] = useState(false);
 
   useEffect(() => {
     fetchMyTurfs();
