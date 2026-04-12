@@ -229,19 +229,23 @@ export default function App() {
 
     setProfile(data);
     try {
-      const fbProfile = await getFirebaseProfile(uid);
-      if (fbProfile) {
-        setFirebaseProfile(fbProfile);
-      } else if (authUser) {
-        const newProfile = await ensureFirebaseProfile(uid, {
-          full_name: data?.full_name || authUser.user_metadata?.full_name || authUser.email || '',
-          email: authUser.email,
-          phone: data?.phone || '',
-          preferred_city: data?.preferred_city || '',
-          avatar_url: data?.avatar_url || '',
-          role: data?.role || 'customer',
-        });
-        setFirebaseProfile(newProfile);
+      if (isFirebaseConfigured) {
+        const fbProfile = await getFirebaseProfile(uid);
+        if (fbProfile) {
+          setFirebaseProfile(fbProfile);
+        } else if (authUser) {
+          const newProfile = await ensureFirebaseProfile(uid, {
+            full_name: data?.full_name || authUser.user_metadata?.full_name || authUser.email || '',
+            email: authUser.email,
+            phone: data?.phone || '',
+            preferred_city: data?.preferred_city || '',
+            avatar_url: data?.avatar_url || '',
+            role: data?.role || 'customer',
+          });
+          setFirebaseProfile(newProfile);
+        }
+      } else {
+        setFirebaseProfile(null);
       }
     } catch (err) {
       console.error('Firebase profile sync failed:', err);
@@ -585,7 +589,7 @@ export default function App() {
 
     try {
       let avatarUrl = firebaseProfile?.avatar_url || '';
-      if (profilePhotoFile && session?.user?.id) {
+      if (profilePhotoFile && session?.user?.id && isFirebaseConfigured) {
         avatarUrl = await uploadProfilePhoto(session.user.id, profilePhotoFile);
       }
 
@@ -595,14 +599,19 @@ export default function App() {
       });
       if (error) throw error;
 
-      const updatedFirebaseProfile = await handleSaveFirebaseProfile(session.user.id, {
-        full_name: updates.full_name,
-        phone: updates.phone,
-        preferred_city: updates.preferred_city,
-        avatar_url: avatarUrl,
-      });
+      let updatedFirebaseProfile = null;
+      if (isFirebaseConfigured) {
+        updatedFirebaseProfile = await handleSaveFirebaseProfile(session.user.id, {
+          full_name: updates.full_name,
+          phone: updates.phone,
+          preferred_city: updates.preferred_city,
+          avatar_url: avatarUrl,
+        });
+      }
 
-      setFirebaseProfile(updatedFirebaseProfile);
+      if (updatedFirebaseProfile) {
+        setFirebaseProfile(updatedFirebaseProfile);
+      }
       setProfile((prev) => ({
         ...prev,
         full_name: updates.full_name,
@@ -927,6 +936,12 @@ export default function App() {
             <h2 className="text-xl font-display font-bold text-zinc-900">My Profile</h2>
           </header>
           <div className="p-8 flex flex-col items-center justify-center text-center">
+            {!isFirebaseConfigured && (
+              <div className="mb-6 w-full rounded-3xl bg-orange-50 border border-orange-100 p-4 text-orange-700 text-sm shadow-sm">
+                <p className="font-bold">Firebase profile uploads are disabled.</p>
+                <p>Profile photos and realtime Firebase profile syncing require Firebase config. The rest of the app still works with Supabase.</p>
+              </div>
+            )}
             <div className="w-24 h-24 rounded-full bg-emerald-100 mb-4 overflow-hidden border-4 border-white shadow-lg">
               <img src={profilePhotoPreview || firebaseProfile?.avatar_url || profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.full_name || profile?.email}` } alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             </div>
@@ -1455,12 +1470,6 @@ export default function App() {
         {showRotateWarning && (
           <div className="mx-6 mt-6 p-4 rounded-3xl bg-yellow-50 border border-yellow-200 text-yellow-900 text-sm shadow-sm text-center">
             For the best experience, rotate your phone back to portrait mode. The app is optimized for mobile portrait view.
-          </div>
-        )}
-        {!isFirebaseConfigured && (
-          <div className="mx-6 mt-6 p-4 rounded-3xl bg-red-50 border border-red-100 text-red-700 text-sm shadow-sm">
-            <p className="font-bold">Firebase is not configured.</p>
-            <p>Profile uploads and realtime Firebase features require Firebase setup; feedback and comments use Supabase.</p>
           </div>
         )}
         <AnimatePresence mode="wait">

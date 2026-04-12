@@ -34,22 +34,25 @@ try {
   console.error('Firebase initialization failed:', error);
 }
 
+const isFirebaseEnabled = Boolean(db && storage);
+
 const ensureFirebaseEnabled = () => {
-  if (!db || !storage) {
-    throw new Error('Firebase is not configured. Please add Firebase env variables.');
+  if (!isFirebaseEnabled) {
+    console.warn('Firebase is not configured. Skipping Firebase operation.');
+    return false;
   }
+  return true;
 };
 
 export const getFirebaseProfile = async (uid) => {
-  if (!uid || !db) return null;
+  if (!uid || !isFirebaseEnabled) return null;
   const profileRef = doc(db, 'user_profiles', uid);
   const snapshot = await getDoc(profileRef);
   return snapshot.exists() ? snapshot.data() : null;
 };
 
 export const ensureFirebaseProfile = async (uid, profileData) => {
-  if (!uid) return null;
-  ensureFirebaseEnabled();
+  if (!uid || !ensureFirebaseEnabled()) return null;
   const profileRef = doc(db, 'user_profiles', uid);
   const snapshot = await getDoc(profileRef);
   const now = serverTimestamp();
@@ -73,8 +76,7 @@ export const ensureFirebaseProfile = async (uid, profileData) => {
 };
 
 export const saveFirebaseProfile = async (uid, profileData) => {
-  if (!uid) return null;
-  ensureFirebaseEnabled();
+  if (!uid || !ensureFirebaseEnabled()) return null;
   const profileRef = doc(db, 'user_profiles', uid);
   await setDoc(profileRef, {
     ...profileData,
@@ -85,24 +87,23 @@ export const saveFirebaseProfile = async (uid, profileData) => {
 };
 
 export const uploadProfilePhoto = async (uid, file) => {
-  if (!uid || !file) return null;
-  ensureFirebaseEnabled();
+  if (!uid || !file || !ensureFirebaseEnabled()) return null;
   const storageRef = ref(storage, `profile_photos/${uid}/${file.name}`);
   await uploadBytes(storageRef, file);
   return await getDownloadURL(storageRef);
 };
 
 const createTurfDoc = async (turfId) => {
-  if (!turfId) return;
-  ensureFirebaseEnabled();
+  if (!turfId || !ensureFirebaseEnabled()) return null;
   const turfRef = doc(db, 'firebase_turfs', turfId);
   await setDoc(turfRef, { updated_at: serverTimestamp() }, { merge: true });
   return turfRef;
 };
 
 export const fetchTurfComments = async (turfId) => {
-  if (!turfId) return [];
+  if (!turfId || !ensureFirebaseEnabled()) return [];
   const turfRef = await createTurfDoc(turfId);
+  if (!turfRef) return [];
   const commentsRef = collection(turfRef, 'comments');
   const q = query(commentsRef, orderBy('created_at', 'desc'));
   const snapshot = await getDocs(q);
@@ -110,8 +111,9 @@ export const fetchTurfComments = async (turfId) => {
 };
 
 export const fetchTurfFeedback = async (turfId) => {
-  if (!turfId) return [];
+  if (!turfId || !ensureFirebaseEnabled()) return [];
   const turfRef = await createTurfDoc(turfId);
+  if (!turfRef) return [];
   const feedbackRef = collection(turfRef, 'feedback');
   const q = query(feedbackRef, orderBy('created_at', 'desc'));
   const snapshot = await getDocs(q);
@@ -119,8 +121,9 @@ export const fetchTurfFeedback = async (turfId) => {
 };
 
 export const subscribeToTurfComments = async (turfId, callback) => {
-  if (!turfId) return () => {};
+  if (!turfId || !ensureFirebaseEnabled()) return () => {};
   const turfRef = await createTurfDoc(turfId);
+  if (!turfRef) return () => {};
   const commentsRef = collection(turfRef, 'comments');
   const q = query(commentsRef, orderBy('created_at', 'desc'));
   return onSnapshot(q, (snapshot) => {
@@ -129,8 +132,9 @@ export const subscribeToTurfComments = async (turfId, callback) => {
 };
 
 export const subscribeToTurfFeedback = async (turfId, callback) => {
-  if (!turfId) return () => {};
+  if (!turfId || !ensureFirebaseEnabled()) return () => {};
   const turfRef = await createTurfDoc(turfId);
+  if (!turfRef) return () => {};
   const feedbackRef = collection(turfRef, 'feedback');
   const q = query(feedbackRef, orderBy('created_at', 'desc'));
   return onSnapshot(q, (snapshot) => {
