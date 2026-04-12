@@ -34,11 +34,13 @@ It installs dependencies, lints the code, and builds the production app.
 
 This app is configured for Firebase Hosting in `firebase.json`.
 
-To deploy the current build to Firebase Hosting:
+To deploy the current build to Firebase Hosting locally:
 
 ```bash
 npm run firebase:deploy
 ```
+
+For GitHub Actions deployment, add the secret `FIREBASE_TOKEN` to this repository and the workflow will deploy automatically on pushes to `main`.
 
 If you need service account deployment:
 
