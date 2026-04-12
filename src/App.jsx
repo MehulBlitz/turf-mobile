@@ -25,7 +25,7 @@ import {
   MessageCircle
 } from 'lucide-react';
 import { cn, formatCurrency } from './lib/utils';
-import { supabase, isSupabaseConfigured, createBookingWithTicket } from './lib/supabase';
+import { supabase, isSupabaseConfigured, createBookingWithTicket, createNotification, fetchNotificationsForUser } from './lib/supabase';
 import AuthScreen from './components/AuthScreen';
 import OwnerDashboard from './components/OwnerDashboard';
 import AdminDashboard from './components/AdminDashboard';
@@ -241,6 +241,19 @@ function AppContent() {
     setBookings(data || []);
   }, []);
 
+  const loadNotifications = useCallback(async (uid) => {
+    if (!uid || !isSupabaseConfigured) return;
+    const { data, error } = await fetchNotificationsForUser(uid);
+    if (error) {
+      console.error('Failed to load notifications:', error);
+      return;
+    }
+    setNotifications((data || []).map((notification) => ({
+      ...notification,
+      timestamp: notification.created_at ? new Date(notification.created_at) : new Date(),
+    })));
+  }, []);
+
   const fetchTurfs = useCallback(async () => {
     try {
       // Load base turf list from Supabase only.
@@ -382,6 +395,7 @@ function AppContent() {
         if (session) {
           fetchProfile(session.user.id, session.user);
           fetchUserBookings(session.user.id);
+          loadNotifications(session.user.id);
         }
       } catch (err) {
         console.error('Auth initialization failed:', err);
@@ -395,10 +409,12 @@ function AppContent() {
       if (session) {
         fetchProfile(session.user.id, session.user);
         fetchUserBookings(session.user.id);
+        loadNotifications(session.user.id);
       }
       else {
         setProfile(null);
         setBookings([]);
+        setNotifications([]);
       }
     });
 
@@ -447,6 +463,31 @@ function AppContent() {
       window.removeEventListener('orientationchange', updateViewportMode);
     };
   }, [fetchTurfs, fetchProfile, fetchUserBookings, fetchBookedSlots]);
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    loadNotifications(session.user.id);
+    const notificationsChannel = supabase
+      .channel(`notifications-${session.user.id}-changes`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `recipient_id=eq.${session.user.id}`,
+        },
+        () => {
+          loadNotifications(session.user.id);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(notificationsChannel);
+    };
+  }, [session?.user?.id, loadNotifications]);
   /* eslint-enable react-hooks/exhaustive-deps */
 
   // Keep selectedTurf in sync with turfs array
@@ -549,6 +590,25 @@ function AppContent() {
         .eq('id', selectedCancellation.id);
       if (error) throw error;
       await fetchUserBookings(session.user.id);
+      await createNotification({
+        recipient_id: session.user.id,
+        sender_id: session.user.id,
+        title: 'Booking Cancelled',
+        message: `${selectedCancellation.turfs?.name} has been cancelled.`,
+        type: 'cancel',
+        booking_id: selectedCancellation.id,
+      });
+      if (selectedCancellation.turfs?.owner_id) {
+        await createNotification({
+          recipient_id: selectedCancellation.turfs.owner_id,
+          sender_id: session.user.id,
+          title: 'Booking Cancelled',
+          message: `${profile?.full_name || 'A customer'} cancelled booking for ${selectedCancellation.turfs?.name}.`,
+          type: 'cancel',
+          booking_id: selectedCancellation.id,
+        });
+      }
+      await loadNotifications(session.user.id);
       addNotification('cancel', 'Booking Cancelled', `${selectedCancellation.turfs?.name} has been cancelled.`);
       setSelectedCancellation(null);
     } catch (err) {
@@ -677,6 +737,29 @@ function AppContent() {
         price: selectedSlot.price,
         pricePerHour: selectedTurf.price_per_hour
       });
+
+      // Save synced notifications for customer and turf owner
+      await createNotification({
+        recipient_id: session.user.id,
+        sender_id: session.user.id,
+        title: 'Booking Confirmed',
+        message: `Your booking for ${selectedTurf.name} on ${new Date(selectedDate).toLocaleDateString()} at ${selectedSlot.start} is confirmed.`,
+        type: 'booking',
+        booking_id: data.id,
+      });
+
+      if (selectedTurf?.owner_id) {
+        await createNotification({
+          recipient_id: selectedTurf.owner_id,
+          sender_id: session.user.id,
+          title: 'New Turf Booking',
+          message: `${profile?.full_name || 'A customer'} booked ${selectedTurf.name} on ${new Date(selectedDate).toLocaleDateString()} at ${selectedSlot.start}.`,
+          type: 'booking',
+          booking_id: data.id,
+        });
+      }
+
+      await loadNotifications(session.user.id);
 
       // Show notifications and toast
       addNotification('booking', '✅ Booking Confirmed!', `${selectedTurf.name} on ${new Date(selectedDate).toLocaleDateString()}`);
