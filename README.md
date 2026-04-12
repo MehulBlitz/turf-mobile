@@ -38,6 +38,16 @@ This repository includes a GitHub Actions workflow at `.github/workflows/android
 
 There is also a manual release workflow at `.github/workflows/android-release.yml`. Use it to build the Android debug APK and publish it as a GitHub release asset.
 
+### Triggering the release workflow
+
+1. Open this repository on GitHub.
+2. Click the `Actions` tab.
+3. Select `Android Release` from the list of workflows.
+4. Click `Run workflow` and choose the branch `main`.
+5. Start the workflow.
+
+The workflow publishes the debug APK as a GitHub Release asset named `app-debug.apk`.
+
 ## Web deployment
 
 This app is configured for Firebase Hosting in `firebase.json`.
@@ -50,7 +60,19 @@ To deploy the current build to Firebase Hosting locally:
 npm run firebase:deploy
 ```
 
-For GitHub Actions deployment, add the secret `FIREBASE_TOKEN` to this repository and the workflow will deploy automatically on pushes to `main`.
+For GitHub Actions deployment, add these secrets to this repository:
+
+- `FIREBASE_TOKEN`
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+T
+
+- `FIREBASE_TOKEN`
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+The workflow will deploy automatically on pushes to `main`.
 
 If you need service account deployment:
 

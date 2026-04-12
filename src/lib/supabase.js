@@ -1,17 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Use environment variables for credentials
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    'Missing Supabase credentials. Please create a .env.local file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY. ' +
-    'See .env.local.example for reference.'
-  );
-}
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = isSupabaseConfigured
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
 
 const handleError = (error) => {
   if (error) throw error;
@@ -19,7 +15,7 @@ const handleError = (error) => {
 };
 
 export const fetchTurfComments = async (turfId) => {
-  if (!turfId) return [];
+  if (!turfId || !isSupabaseConfigured) return [];
   const { data, error } = await supabase
     .from('turf_comments')
     .select('*')
@@ -30,7 +26,7 @@ export const fetchTurfComments = async (turfId) => {
 };
 
 export const fetchTurfFeedback = async (turfId) => {
-  if (!turfId) return [];
+  if (!turfId || !isSupabaseConfigured) return [];
   const { data, error } = await supabase
     .from('turf_feedback')
     .select('*')
@@ -41,6 +37,7 @@ export const fetchTurfFeedback = async (turfId) => {
 };
 
 export const submitTurfComment = async (turfId, commentData) => {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
   if (!turfId || !commentData) throw new Error('Missing comment payload.');
   const payload = {
     turf_id: turfId,
@@ -57,6 +54,7 @@ export const submitTurfComment = async (turfId, commentData) => {
 };
 
 export const submitTurfFeedback = async (turfId, feedbackData) => {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
   if (!turfId || !feedbackData) throw new Error('Missing feedback payload.');
   const payload = {
     turf_id: turfId,
@@ -73,7 +71,7 @@ export const submitTurfFeedback = async (turfId, feedbackData) => {
 };
 
 export const fetchTurfRatingSummary = async (turfId) => {
-  if (!turfId) return { average: null, count: 0 };
+  if (!turfId || !isSupabaseConfigured) return { average: null, count: 0 };
   const { data, error } = await supabase
     .from('turf_feedback')
     .select('rating')

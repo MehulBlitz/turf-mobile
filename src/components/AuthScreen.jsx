@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Mail, Lock, User, Briefcase, ArrowRight, Loader2, Trophy, Users } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { cn } from '../lib/utils';
 
 export default function AuthScreen({ onAuthSuccess }) {
@@ -13,6 +13,26 @@ export default function AuthScreen({ onAuthSuccess }) {
   const [fullName, setFullName] = useState('');
   const [error, setError] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  if (!isSupabaseConfigured) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50 p-6">
+        <div className="max-w-lg rounded-3xl border border-red-200 bg-white p-10 shadow-lg shadow-red-100/50">
+          <h1 className="text-2xl font-bold text-red-700 mb-4">Supabase configuration missing</h1>
+          <p className="text-zinc-600 mb-4">
+            The app was built without the required Supabase environment variables. Please add the following secrets to your repository or local environment:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-zinc-700">
+            <li><code>VITE_SUPABASE_URL</code></li>
+            <li><code>VITE_SUPABASE_ANON_KEY</code></li>
+          </ul>
+          <p className="mt-6 text-sm text-zinc-500">
+            On GitHub Actions, add them under the repository secrets. Locally, add them to <code>.env.local</code>.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const handleAuth = async (e) => {
     e.preventDefault();

@@ -25,7 +25,7 @@ import {
   MessageCircle
 } from 'lucide-react';
 import { cn, formatCurrency } from './lib/utils';
-import { supabase } from './lib/supabase';
+import { supabase, isSupabaseConfigured } from './lib/supabase';
 import AuthScreen from './components/AuthScreen';
 import OwnerDashboard from './components/OwnerDashboard';
 import AdminDashboard from './components/AdminDashboard';
@@ -82,6 +82,26 @@ export default function App() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [selectedCancellation, setSelectedCancellation] = useState(null);
+
+  if (!isSupabaseConfigured) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50 p-6">
+        <div className="max-w-2xl rounded-3xl border border-red-200 bg-white p-10 shadow-lg shadow-red-100/50">
+          <h1 className="text-3xl font-bold text-red-700 mb-4">Supabase configuration is missing</h1>
+          <p className="text-zinc-700 mb-4">
+            The app requires the following environment variables to connect to Supabase:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-zinc-700">
+            <li><code>VITE_SUPABASE_URL</code></li>
+            <li><code>VITE_SUPABASE_ANON_KEY</code></li>
+          </ul>
+          <p className="mt-6 text-zinc-600">
+            Add them to your <code>.env.local</code> file for local development, or configure them as GitHub repository secrets for CI/deploy.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const popularCities = ['Hyderabad', 'Mumbai', 'Bangalore', 'Delhi', 'Chennai', 'Pune', 'Kolkata', 'Ahmedabad'];
 
