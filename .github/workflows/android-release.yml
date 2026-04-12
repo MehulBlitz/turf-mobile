@@ -48,8 +48,12 @@ jobs:
       - name: Build production web assets
         run: npm run build
 
+      - name: Verify Capacitor CLI
+        run: npm exec -- cap --version
+
       - name: Sync Android project
-        run: npm exec -- cap sync android
+        run: npm run android:sync
+        shell: bash
 
       - name: Assemble debug APK
         run: cd android && ./gradlew assembleDebug
