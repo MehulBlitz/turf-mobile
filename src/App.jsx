@@ -1421,7 +1421,7 @@ export default function App() {
               </div>
             </div>
             <div className="rounded-3xl bg-white/5 border border-white/10 p-4">
-              <p className="text-zinc-400 text-sm">We are preserving mobile UI and app behavior while desktop support is built separately. You can still review the app features here, but the full experience is mobile-first.</p>
+              <p className="text-zinc-400 text-sm">This desktop view is intentionally limited for now. For the best experience, open the app on a mobile phone or install the Android app. Full desktop support will be added later.</p>
             </div>
           </div>
         </div>

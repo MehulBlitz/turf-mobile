@@ -32,7 +32,11 @@ It installs dependencies, lints the code, and builds the production app.
 
 ## Android build workflow
 
-This repository also includes a GitHub Actions workflow at `.github/workflows/android-build.yml` that builds the Android debug APK on pushes to `main` or manually via workflow dispatch.
+This repository includes a GitHub Actions workflow at `.github/workflows/android-build.yml` that builds the Android debug APK on pushes to `main` or manually via workflow dispatch. The build output is uploaded as a workflow artifact named `app-debug-apk`.
+
+## Android release workflow
+
+There is also a manual release workflow at `.github/workflows/android-release.yml`. Use it to build the Android debug APK and publish it as a GitHub release asset.
 
 ## Web deployment
 
