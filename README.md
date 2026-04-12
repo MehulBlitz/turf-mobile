@@ -30,9 +30,15 @@ It installs dependencies, lints the code, and builds the production app.
 3. Install on a connected device:
    `npm run android:install`
 
+## Android build workflow
+
+This repository also includes a GitHub Actions workflow at `.github/workflows/android-build.yml` that builds the Android debug APK on pushes to `main` or manually via workflow dispatch.
+
 ## Web deployment
 
 This app is configured for Firebase Hosting in `firebase.json`.
+
+Live demo: https://turf-booking-171bf.web.app
 
 To deploy the current build to Firebase Hosting locally:
 
