@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Colors - Emerald Green (matches React app) -->
+    <color name="colorPrimary">#10b981</color>
+    <color name="colorPrimaryDark">#059669</color>
+    <color name="colorAccent">#10b981</color>
+
+    <!-- UI Colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+
+    <!-- Neutral Colors -->
+    <color name="zinc_50">#fafafa</color>
+    <color name="zinc_100">#f4f4f5</color>
+    <color name="zinc_200">#e4e4e7</color>
+    <color name="zinc_300">#d4d4d8</color>
+    <color name="zinc_400">#a1a1a6</color>
+    <color name="zinc_500">#71717a</color>
+    <color name="zinc_600">#52525b</color>
+    <color name="zinc_700">#3f3f46</color>
+    <color name="zinc_800">#27272a</color>
+    <color name="zinc_900">#18181b</color>
+
+    <!-- Status Colors -->
+    <color name="status_bar">#10b981</color>
+    <color name="emerald_50">#f0fdf4</color>
+    <color name="emerald_500">#10b981</color>
+    <color name="emerald_600">#059669</color>
+
+    <!-- Semantic Colors -->
+    <color name="success">#10b981</color>
+    <color name="warning">#f59e0b</color>
+    <color name="error">#ef4444</color>
+    <color name="info">#3b82f6</color>
+</resources>

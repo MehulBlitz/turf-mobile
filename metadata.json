@@ -1,0 +1,5 @@
+{
+  "name": "TurfBook",
+  "description": "A premium turf booking and sports community platform.",
+  "requestFramePermissions": ["geolocation"]
+}

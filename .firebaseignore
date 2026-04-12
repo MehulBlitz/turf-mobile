@@ -1,0 +1,11 @@
+node_modules
+src
+android
+.github
+.vscode
+.env*
+*.log
+firebase.json
+.firebaserc
+README.md
+package-lock.json

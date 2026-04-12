@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /user_profiles/{userId} {
+      allow read, write: if true;
+    }
+
+    match /firebase_turfs/{turfId}/comments/{commentId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if false;
+    }
+
+    match /firebase_turfs/{turfId}/feedback/{feedbackId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if false;
+    }
+  }
+}

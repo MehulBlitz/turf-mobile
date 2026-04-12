@@ -1,0 +1,94 @@
+import React, { createContext, useState, useCallback} from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { CheckCircle2, AlertCircle, XCircle, Info } from 'lucide-react';
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const NotificationContext = createContext();
+
+function NotificationStack({ notifications, onRemove }) {
+  const getIcon = (type) => {
+    switch (type) {
+      case 'success':
+        return <CheckCircle2 size={20} className="text-emerald-600" />;
+      case 'error':
+        return <XCircle size={20} className="text-red-600" />;
+      case 'warning':
+        return <AlertCircle size={20} className="text-amber-600" />;
+      default:
+        return <Info size={20} className="text-blue-600" />;
+    }
+  };
+
+  const getStyles = (type) => {
+    switch (type) {
+      case 'success':
+        return 'bg-emerald-50 border-emerald-200 text-emerald-900';
+      case 'error':
+        return 'bg-red-50 border-red-200 text-red-900';
+      case 'warning':
+        return 'bg-amber-50 border-amber-200 text-amber-900';
+      default:
+        return 'bg-blue-50 border-blue-200 text-blue-900';
+    }
+  };
+
+  return (
+    <div className="fixed bottom-6 left-6 right-6 z-[9999] space-y-2 pointer-events-none md:left-auto md:right-6 md:max-w-sm">
+      <AnimatePresence>
+        {notifications.map(notification => (
+          <motion.div
+            key={notification.id}
+            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl border pointer-events-auto cursor-pointer ${getStyles(notification.type)} shadow-lg`}
+            onClick={() => onRemove(notification.id)}
+          >
+            {getIcon(notification.type)}
+            <span className="text-sm font-medium flex-1">{notification.message}</span>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export function NotificationProvider({ children }) {
+  const [notifications, setNotifications] = useState([]);
+
+  const addNotification = useCallback((message, type = 'info', duration = 3000) => {
+    const id = Date.now();
+    setNotifications(prev => [...prev, { id, message, type }]);
+
+    if (duration > 0) {
+      setTimeout(() => {
+        setNotifications(prev => prev.filter(n => n.id !== id));
+      }, duration);
+    }
+
+    return id;
+  }, []);
+
+  const removeNotification = useCallback((id) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  }, []);
+
+  const showSuccess = useCallback((message) => addNotification(message, 'success'), [addNotification]);
+  const showError = useCallback((message) => addNotification(message, 'error'), [addNotification]);
+  const showInfo = useCallback((message) => addNotification(message, 'info'), [addNotification]);
+  const showWarning = useCallback((message) => addNotification(message, 'warning'), [addNotification]);
+
+  return (
+    <NotificationContext.Provider value={{
+      addNotification,
+      removeNotification,
+      showSuccess,
+      showError,
+      showInfo,
+      showWarning
+    }}>
+      {children}
+      <NotificationStack notifications={notifications} onRemove={removeNotification} />
+    </NotificationContext.Provider>
+  );
+}
