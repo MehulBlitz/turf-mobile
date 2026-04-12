@@ -49,6 +49,20 @@ create table if not exists bookings (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- Notifications table for customers and owners
+create table if not exists notifications (
+  id uuid default gen_random_uuid() primary key,
+  recipient_id uuid references profiles(id) on delete cascade,
+  sender_id uuid references profiles(id),
+  booking_id uuid references bookings(id) on delete set null,
+  title text not null,
+  message text not null,
+  type text check (type in ('booking', 'cancel', 'reminder', 'info', 'success', 'warning')) default 'info',
+  read boolean default false,
+  metadata jsonb,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 -- Turf feedback and comments tables
 create table if not exists turf_feedback (
   id uuid default gen_random_uuid() primary key,
@@ -75,6 +89,7 @@ create table if not exists turf_comments (
 alter table profiles enable row level security;
 alter table turfs enable row level security;
 alter table bookings enable row level security;
+alter table notifications enable row level security;
 alter table turf_feedback enable row level security;
 alter table turf_comments enable row level security;
 
@@ -119,6 +134,16 @@ drop policy if exists "Admins can view all bookings" on bookings;
 create policy "Admins can view all bookings" on bookings for select using (
   exists (select 1 from profiles where id = auth.uid() and role = 'admin')
 );
+
+-- Policies for notifications
+drop policy if exists "Users can view their notifications" on notifications;
+create policy "Users can view their notifications" on notifications for select using (auth.uid() = recipient_id);
+drop policy if exists "Send notifications to yourself or your recipients" on notifications;
+create policy "Send notifications to yourself or your recipients" on notifications for insert with check (
+  auth.uid() = sender_id OR auth.uid() = recipient_id
+);
+drop policy if exists "Users can mark own notifications read" on notifications;
+create policy "Users can mark own notifications read" on notifications for update using (auth.uid() = recipient_id) with check (auth.uid() = recipient_id);
 
 -- Policies for turf feedback
 drop policy if exists "Feedback is viewable by everyone" on turf_feedback;

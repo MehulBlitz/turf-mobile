@@ -128,3 +128,45 @@ export const fetchBookingById = async (bookingId) => {
   return data;
 };
 
+export const createNotification = async (notificationData) => {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
+  if (!notificationData || !notificationData.recipient_id) throw new Error('Missing notification recipient.');
+
+  const payload = {
+    ...notificationData,
+    read: false,
+    created_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabase
+    .from('notifications')
+    .insert(payload)
+    .select()
+    .single();
+
+  handleError(error);
+  return data;
+};
+
+export const fetchNotificationsForUser = async (userId) => {
+  if (!userId || !isSupabaseConfigured) return { data: [], error: null };
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('recipient_id', userId)
+    .order('created_at', { ascending: false });
+  return { data: data || [], error };
+};
+
+export const markNotificationRead = async (notificationId) => {
+  if (!notificationId || !isSupabaseConfigured) throw new Error('Supabase is not configured.');
+  const { data, error } = await supabase
+    .from('notifications')
+    .update({ read: true })
+    .eq('id', notificationId)
+    .select()
+    .single();
+  handleError(error);
+  return data;
+};
+
