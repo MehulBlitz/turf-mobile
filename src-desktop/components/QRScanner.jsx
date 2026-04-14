@@ -7,6 +7,12 @@ import { fetchBookingById, fetchBookingByQrToken, supabase } from '../lib/supaba
 import { formatCurrency } from '../lib/utils';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 
+/**
+ * Render a modal UI for scanning QR codes (live camera, captured photo, or gallery) and resolving the scanned payload to booking/admission details.
+ * @param {{ onClose: function }} props - Component properties.
+ * @param {() => void} props.onClose - Function called to dismiss the modal.
+ * @returns {JSX.Element} The QRScanner modal component that manages scanning flows, lookup of booking data, and displays scan results or errors.
+ */
 export default function QRScanner({ onClose }) {
   const [scannedData, setScannedData] = useState(null);
   const [error, setError] = useState(null);

@@ -2,6 +2,11 @@ import { useState, useCallback, useEffect } from 'react';
 
 const FAVORITES_KEY = 'turfbook_favorites';
 
+/**
+ * Manage a persistent list of favorite turf IDs stored in localStorage.
+ *
+ * @returns {{favorites: Array<string|number>, toggleFavorite: function(turfId: string|number): void, isFavorite: function(turfId: string|number): boolean, addFavorite: function(turfId: string|number): void, removeFavorite: function(turfId: string|number): void, clear: function(): void, count: number}} Object containing the current favorites array, helper functions to read and modify it, and the current favorites count.
+ */
 export function useFavorites() {
   const [favorites, setFavorites] = useState(() => {
     // Initialize state from localStorage on component mount

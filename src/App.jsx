@@ -55,6 +55,17 @@ import { ensureFirebaseProfile, getFirebaseProfile, saveFirebaseProfile, uploadP
 import { fetchTurfRatingSummary } from './lib/supabase';
 import { StatusBar, Style } from '@capacitor/status-bar';
 
+/**
+ * Main application content component that manages authentication, profile state,
+ * turf discovery, booking flows, notifications, and the primary UI for mobile.
+ *
+ * Handles state, data fetching, realtime updates, network monitoring, and
+ * mobile-specific interactions (pull-to-refresh, location detection, QR scanner,
+ * and payment/booking flows). Renders role-based dashboards, turf list/detail
+ * views, booking modals, notifications, and profile/settings screens.
+ *
+ * @returns {JSX.Element} The app's primary React element tree for discovery, booking, dashboards, and associated modals.
+ */
 function AppContent() {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);

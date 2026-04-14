@@ -57,6 +57,17 @@ const drawWaves = (ctx, width, height, config, elapsed) => {
   }
 };
 
+/**
+ * Renders an animated full-size canvas that displays a customizable wave background.
+ *
+ * @param {Object} props - Component props.
+ * @param {number} [props.density=12] - Controls the number of wave lines (higher = more lines).
+ * @param {number} [props.speed=0.55] - Controls the animation speed of the waves.
+ * @param {number} [props.amplitude=14] - Controls the vertical amplitude of the waves.
+ * @param {([number, number, number]|string)} [props.color=[16,185,129]] - RGB color as an array or a comma-delimited string used for the glow and wave strokes.
+ * @param {string} [props.className] - Additional CSS class names forwarded to the canvas element.
+ * @returns {JSX.Element} A canvas element that fills its container and renders the animated wave background (aria-hidden).
+ */
 export default function VisualBackground({
   density = 12,
   speed = 0.55,

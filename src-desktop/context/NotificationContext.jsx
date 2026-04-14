@@ -5,6 +5,15 @@ import { CheckCircle2, AlertCircle, XCircle, Info } from 'lucide-react';
 // eslint-disable-next-line react-refresh/only-export-components
 export const NotificationContext = createContext();
 
+/**
+ * Renders a fixed-position stack of notifications and allows dismissing them.
+ *
+ * Renders each notification with type-specific icon and styling, animates its entry/exit, and calls `onRemove(id)` when a notification is clicked.
+ *
+ * @param {Object} props
+ * @param {Array<{id: number|string, message: string, type?: string}>} props.notifications - Array of notifications to display; each item must include `id` and `message`, `type` is optional and controls styling (`'success' | 'error' | 'warning' | 'info'`).
+ * @param {(id: number|string) => void} props.onRemove - Callback invoked with a notification `id` to remove that notification.
+ */
 function NotificationStack({ notifications, onRemove }) {
   const getIcon = (type) => {
     switch (type) {
@@ -53,6 +62,19 @@ function NotificationStack({ notifications, onRemove }) {
   );
 }
 
+/**
+ * Provides notification state and APIs to descendants; renders children and a visual notification stack.
+ *
+ * The provider manages an internal list of notifications and exposes functions via context:
+ * `addNotification(message, type = 'info', duration = 3000)` — adds a notification and returns its generated id;
+ * `removeNotification(id)` — removes the notification with the given id;
+ * `showSuccess(message)`, `showError(message)`, `showInfo(message)`, `showWarning(message)` — convenience helpers that add a notification with the corresponding type.
+ * When `addNotification` is called with `duration > 0`, the notification is automatically removed after the specified duration.
+ *
+ * @param {Object} props
+ * @param {import('react').ReactNode} props.children - Child elements that will have access to the notification context.
+ * @returns {import('react').JSX.Element} The provider element that wraps children and renders the notification stack.
+ */
 export function NotificationProvider({ children }) {
   const [notifications, setNotifications] = useState([]);
 
