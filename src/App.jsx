@@ -727,9 +727,7 @@ function AppContent() {
           cancelled_by: 'customer',
           qr_token: generateQrToken(),
         })
-        .match({ id: selectedCancellation.id })
-        .not('status', 'eq', 'cancelled')
-        .not('status', 'eq', 'rejected')
+        .eq('id', selectedCancellation.id)
         .select()
         .maybeSingle();
       if (error) throw error;

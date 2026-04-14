@@ -418,9 +418,7 @@ export default function OwnerDashboard({ user, onTurfUpdate }) {
         cancelled_by: 'owner',
         qr_token: generateQrToken(),
       })
-      .match({ id: booking.id })
-      .not('status', 'eq', 'cancelled')
-      .not('status', 'eq', 'rejected')
+      .eq('id', booking.id)
       .select()
       .maybeSingle();
       if (error) throw error;
