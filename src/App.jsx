@@ -1760,7 +1760,7 @@ function AppContent() {
   }
 
   return (
-    <div className="bg-zinc-100 min-h-screen font-sans">
+    <div className="ios-theme bg-zinc-100 min-h-screen font-sans">
       <div
         className="mobile-container overflow-y-auto"
         style={{ touchAction: 'pan-y' }}
@@ -1963,13 +1963,13 @@ function AppContent() {
 
         {/* Bottom Navigation */}
         {!selectedTurf && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-[400px] z-30">
-            <nav className="bg-zinc-900/90 backdrop-blur-xl rounded-[2.5rem] p-2 flex items-center shadow-2xl border border-white/10">
+          <div className="ios-tabbar-wrap fixed left-1/2 -translate-x-1/2 z-30">
+            <nav className="ios-tabbar flex items-center">
               <button 
                 onClick={() => setActiveTab('home')}
                 className={cn(
-                  "flex items-center justify-center gap-2 h-14 rounded-3xl transition-all duration-300 flex-1",
-                  activeTab === 'home' ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "text-zinc-500"
+                  "ios-tabbar-item flex items-center justify-center gap-2 transition-all duration-300 flex-1",
+                  activeTab === 'home' && "is-active"
                 )}
               >
                 <Home size={20} className="flex-shrink-0" />
@@ -1980,8 +1980,8 @@ function AppContent() {
                 <button 
                   onClick={() => setActiveTab('dashboard')}
                   className={cn(
-                    "flex items-center justify-center gap-2 h-14 rounded-3xl transition-all duration-300 flex-1",
-                    activeTab === 'dashboard' ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "text-zinc-500"
+                    "ios-tabbar-item flex items-center justify-center gap-2 transition-all duration-300 flex-1",
+                    activeTab === 'dashboard' && "is-active"
                   )}
                 >
                   <LayoutDashboard size={20} className="flex-shrink-0" />
@@ -1992,8 +1992,8 @@ function AppContent() {
               <button
                 onClick={() => setActiveTab('bookings')}
                 className={cn(
-                  "flex items-center justify-center gap-2 h-14 rounded-3xl transition-all duration-300 flex-1",
-                  activeTab === 'bookings' ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "text-zinc-500"
+                  "ios-tabbar-item flex items-center justify-center gap-2 transition-all duration-300 flex-1",
+                  activeTab === 'bookings' && "is-active"
                 )}
               >
                 <CalendarDays size={20} className="flex-shrink-0" />
@@ -2003,8 +2003,8 @@ function AppContent() {
               <button
                 onClick={() => setActiveTab('feedback')}
                 className={cn(
-                  "flex items-center justify-center gap-2 h-14 rounded-3xl transition-all duration-300 flex-1",
-                  activeTab === 'feedback' ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "text-zinc-500"
+                  "ios-tabbar-item flex items-center justify-center gap-2 transition-all duration-300 flex-1",
+                  activeTab === 'feedback' && "is-active"
                 )}
               >
                 <MessageCircle size={20} className="flex-shrink-0" />
@@ -2014,8 +2014,8 @@ function AppContent() {
               <button
                 onClick={() => setActiveTab('calendar')}
                 className={cn(
-                  "flex items-center justify-center gap-2 h-14 rounded-3xl transition-all duration-300 flex-1",
-                  activeTab === 'calendar' ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "text-zinc-500"
+                  "ios-tabbar-item flex items-center justify-center gap-2 transition-all duration-300 flex-1",
+                  activeTab === 'calendar' && "is-active"
                 )}
               >
                 <Calendar size={20} className="flex-shrink-0" />
@@ -2025,8 +2025,8 @@ function AppContent() {
               <button
                 onClick={() => setActiveTab('profile')}
                 className={cn(
-                  "flex items-center justify-center gap-2 h-14 rounded-3xl transition-all duration-300 flex-1",
-                  activeTab === 'profile' ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "text-zinc-500"
+                  "ios-tabbar-item flex items-center justify-center gap-2 transition-all duration-300 flex-1",
+                  activeTab === 'profile' && "is-active"
                 )}
               >
                 <User size={20} className="flex-shrink-0" />
