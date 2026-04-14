@@ -3,9 +3,13 @@
 ## Build and Test
 - Install dependencies with `npm install`.
 - Run web development with `npm run dev` (Vite on port `3000`).
-- Run production build with `npm run build` before Android deploys.
+- Run production build with `npm run build` before mobile deploys.
 - Run lint checks with `npm run lint`.
-- Android deploy flow: `npm run build`, `npx cap sync android`, then `npx cap run android --target <device-id>`.
+- **Android deploy flow:** `npm run build`, `npx cap sync android`, then `npx cap run android --target <device-id>`.
+- **iOS deploy flow:** `npm run build`, `npx cap sync ios`, then use Xcode or `npm run ios:release` for IPA.
+- **iOS builds:** IPA builds are automated via GitHub Actions (`ios-build.yml` on main push, `ios-release.yml` for manual releases).
+- For iOS local development setup and troubleshooting: see [iOS Build Setup Guide](../docs/ios-build-setup.md).
+- GitHub Actions uses macOS runner for iOS builds; secrets needed: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, and optionally code signing secrets for CI/CD.
 
 ## Architecture
 - Customer app shell and global state live in [src/App.jsx](../src/App.jsx).
@@ -36,4 +40,4 @@
 ## Link, Don’t Embed
 - Product and setup overview: [README.md](../README.md).
 - Database schema and RLS details: [supabase_schema.sql](../supabase_schema.sql).
-- Firebase deploy scripts and CI helpers: [scripts/firebase-deploy-ci.js](../scripts/firebase-deploy-ci.js), [scripts/firebase-deploy-sa.js](../scripts/firebase-deploy-sa.js).
+- Firebase deploy scripts and CI helpers: [scripts/firebase-deploy-ci.js](../scripts/firebase-deploy-ci.js), [scripts/firebase-deploy-sa.js](../scripts/firebase-deploy-sa.js).- iOS build setup and code signing guide: [docs/ios-build-setup.md](../docs/ios-build-setup.md).

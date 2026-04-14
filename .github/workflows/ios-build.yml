@@ -1,0 +1,265 @@
+name: iOS Build
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'debug'
+        type: choice
+        options:
+          - debug
+          - release
+
+permissions:
+  contents: write
+
+jobs:
+  ios-build:
+    name: Build iOS IPA
+    runs-on: macos-latest
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Set up Xcode
+        run: sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production web assets
+        run: npm run build
+
+      - name: Verify Capacitor CLI
+        run: npm exec -- cap --version
+
+      - name: Sync iOS project
+        run: npm run ios:sync
+        shell: bash
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: ios/App/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('ios/App/Podfile.lock') }}
+          restore-keys: ${{ runner.os }}-pods-
+
+      - name: Install CocoaPods dependencies
+        run: |
+          cd ios/App
+          pod install --repo-update
+        shell: bash
+
+      - name: Import provisioning profile for signing
+        if: secrets.IOS_PROVISIONING_PROFILE_BASE64
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles/
+          echo "${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+        shell: bash
+
+      - name: Import code signing certificate
+        if: secrets.IOS_SIGNING_CERTIFICATE_BASE64
+        env:
+          CERTIFICATE_PATH: ${{ runner.temp }}/certificate.p12
+          KEYCHAIN_PATH: ${{ runner.temp }}/app-signing.keychain-db
+        run: |
+          echo "${{ secrets.IOS_SIGNING_CERTIFICATE_BASE64 }}" | base64 --decode -o $CERTIFICATE_PATH
+          
+          security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" $KEYCHAIN_PATH
+          security default-keychain -s $KEYCHAIN_PATH
+          security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" $KEYCHAIN_PATH
+          
+          security import $CERTIFICATE_PATH \
+            -k $KEYCHAIN_PATH \
+            -P "${{ secrets.CERTIFICATE_PASSWORD }}" \
+            -A
+          
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" $KEYCHAIN_PATH
+        shell: bash
+
+      - name: Build iOS App Archive (Debug)
+        if: github.event.inputs.build_type == 'debug' || github.event_name == 'push'
+        run: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -derivedDataPath ../../build \
+            -allowProvisioningUpdates \
+            archive \
+            -archivePath ../../build/App-Debug.xcarchive
+        shell: bash
+
+      - name: Build iOS App Archive (Release)
+        if: github.event.inputs.build_type == 'release'
+        run: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -derivedDataPath ../../build \
+            -allowProvisioningUpdates \
+            archive \
+            -archivePath ../../build/App-Release.xcarchive
+        shell: bash
+
+      - name: Create ExportOptions.plist for Debug
+        if: github.event.inputs.build_type == 'debug' || github.event_name == 'push'
+        run: |
+          mkdir -p build
+          cat > build/ExportOptions.plist << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>development</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>com.turfbooking.app</key>
+                  <string>iOS Team Provisioning Profile: com.turfbooking.app</string>
+              </dict>
+              <key>signingCertificate</key>
+              <string>Apple Development</string>
+              <key>stripSwiftSymbols</key>
+              <true/>
+              <key>teamID</key>
+              <string>${{ secrets.APPLE_TEAM_ID }}</string>
+          </dict>
+          </plist>
+          EOF
+        shell: bash
+
+      - name: Create ExportOptions.plist for Release
+        if: github.event.inputs.build_type == 'release'
+        run: |
+          mkdir -p build
+          cat > build/ExportOptions.plist << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>com.turfbooking.app</key>
+                  <string>iOS App Store Provisioning Profile: com.turfbooking.app</string>
+              </dict>
+              <key>signingCertificate</key>
+              <string>Apple Distribution</string>
+              <key>stripSwiftSymbols</key>
+              <true/>
+              <key>teamID</key>
+              <string>${{ secrets.APPLE_TEAM_ID }}</string>
+          </dict>
+          </plist>
+          EOF
+        shell: bash
+
+      - name: Export Debug IPA
+        if: github.event.inputs.build_type == 'debug' || github.event_name == 'push'
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath build/App-Debug.xcarchive \
+            -exportOptionsPlist build/ExportOptions.plist \
+            -exportPath build/ipa-debug
+        shell: bash
+
+      - name: Export Release IPA
+        if: github.event.inputs.build_type == 'release'
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath build/App-Release.xcarchive \
+            -exportOptionsPlist build/ExportOptions.plist \
+            -exportPath build/ipa-release
+        shell: bash
+
+      - name: Rename Debug IPA
+        if: github.event.inputs.build_type == 'debug' || github.event_name == 'push'
+        run: |
+          mv build/ipa-debug/App.ipa build/app-debug-${{ github.run_number }}.ipa
+        shell: bash
+
+      - name: Rename Release IPA
+        if: github.event.inputs.build_type == 'release'
+        run: |
+          mv build/ipa-release/App.ipa build/app-release-${{ github.run_number }}.ipa
+        shell: bash
+
+      - name: Create GitHub release and attach Debug IPA
+        if: github.event.inputs.build_type == 'debug' || github.event_name == 'push'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ios-debug-${{ github.run_number }}
+          name: iOS Debug Build ${{ github.run_number }}
+          body: |
+            Debug IPA built from commit `${{ github.sha }}`.
+            This release contains the debug IPA generated by the iOS Build workflow.
+          files: build/app-debug-${{ github.run_number }}.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub release and attach Release IPA
+        if: github.event.inputs.build_type == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ios-release-${{ github.run_number }}
+          name: iOS Release Build ${{ github.run_number }}
+          body: |
+            Release IPA built from commit `${{ github.sha }}`.
+            This release contains the release IPA generated by the iOS Build workflow.
+          files: build/app-release-${{ github.run_number }}.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Debug IPA artifact
+        if: github.event.inputs.build_type == 'debug' || github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-app-debug
+          path: build/app-debug-${{ github.run_number }}.ipa
+          retention-days: 30
+
+      - name: Upload Release IPA artifact
+        if: github.event.inputs.build_type == 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-app-release
+          path: build/app-release-${{ github.run_number }}.ipa
+          retention-days: 30
+
+      - name: Comment on PR with IPA download links
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `📱 **iOS IPA Build Complete**\n\nDownload from [GitHub Release: ios-debug-${{ github.run_number }}](https://github.com/${{ github.repository }}/releases/tag/ios-debug-${{ github.run_number }})\n\nOr from [Artifacts Tab](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`
+            })

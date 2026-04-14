@@ -8,6 +8,12 @@
   "android": {
     "allowMixedContent": true
   },
+  "ios": {
+    "preferredContentMode": "mobile",
+    "limitsNavigationsToAppBoundDomains": true,
+    "allowsInlineMediaPlayback": true,
+    "allowsLinkPreview": false
+  },
   "plugins": {
     "Camera": {
       "permissions": ["camera", "photos"]
