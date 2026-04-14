@@ -1,6 +1,22 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
+/**
+ * React hook that manages booking-related state and exposes Supabase-backed operations for fetching and modifying bookings and booked slots.
+ *
+ * @returns {{
+ *   bookings: Array, 
+ *   setBookings: function,
+ *   bookedSlots: Array,
+ *   setBookedSlots: function,
+ *   loading: boolean,
+ *   error: string|null,
+ *   fetchUserBookings: function(userId: string): void,
+ *   fetchBookedSlots: function(turfId: string, date: Date|string): void,
+ *   createBooking: function(bookingData: Object): { success: boolean, data?: Object, error?: string },
+ *   updateBookingStatus: function(bookingId: string|number, status: string): { success: boolean, error?: string }
+ * }}
+ */
 export function useBookings() {
   const [bookings, setBookings] = useState([]);
   const [bookedSlots, setBookedSlots] = useState([]);

@@ -5,6 +5,21 @@ import { cn } from '../lib/utils';
 import { validatePhone, validateFullName } from '../utils/validation';
 import AppAvatar from './common/AppAvatar';
 
+/**
+ * Render the customer profile page with view and edit modes for basic profile fields.
+ *
+ * The component displays avatar and email (read-only), and allows editing full name, phone, and preferred city.
+ * It validates `full_name` (minimum 2 characters) and `phone` (optional; must be a 10-digit number when provided),
+ * and calls `onUpdate` with `{ full_name, phone, preferred_city, updated_at }` when saving. While saving it exposes
+ * a loading state and surfaces a `general` error message on failure.
+ *
+ * @param {Object} props
+ * @param {Object} props.profile - Initial profile values (e.g., `full_name`, `phone`, `preferred_city`, `email`, `avatar_url`).
+ * @param {() => void} props.onClose - Called when the back/close button is pressed.
+ * @param {(updatedProfile: { full_name: string, phone: string, preferred_city: string, updated_at: string }) => Promise<void>} props.onUpdate - Async handler invoked with updated profile fields when the user saves changes.
+ * @param {() => void} props.onLogout - Called when the user selects the Sign Out action.
+ * @returns {JSX.Element} The rendered CustomerProfilePage component.
+ */
 export default function CustomerProfilePage({ profile, onClose, onUpdate, onLogout }) {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);

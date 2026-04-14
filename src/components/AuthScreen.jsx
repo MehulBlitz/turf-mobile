@@ -4,6 +4,15 @@ import { Mail, Lock, User, Briefcase, ArrowRight, Loader2, Trophy, Users } from 
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { cn } from '../lib/utils';
 
+/**
+ * Renders an authentication screen that supports email/password sign-in, email/password sign-up with role and full name, and Google OAuth sign-in using Supabase.
+ *
+ * This component handles login vs. signup flows, shows an email-confirmation overlay after sign-up, and displays Supabase configuration errors when environment variables are missing.
+ *
+ * @param {{ onAuthSuccess?: () => void }} props - Component props.
+ * @param {() => void} [props.onAuthSuccess] - Called after a successful sign-in (not called after sign-up; sign-up shows an email confirmation overlay until the user verifies their email).
+ * @returns {JSX.Element} The authentication UI.
+ */
 export default function AuthScreen({ onAuthSuccess }) {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);

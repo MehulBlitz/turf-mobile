@@ -14,6 +14,14 @@ const AMENITY_ICONS = {
   'Cafeteria': '🍽️'
 };
 
+/**
+ * Render a bottom-sheet modal that displays detailed information about a turf and provides a UI to select and book time slots.
+ *
+ * @param {{id?: string, name?: string, image_url?: string, media_urls?: string[], rating?: number|string, price_per_hour?: number, description?: string, games?: string[], amenities?: string[], time_slots?: {start: string, end: string, price: number}[]}|null} turf - Turf data object; may be null or undefined while loading.
+ * @param {() => void} onClose - Callback invoked when the modal close control is activated.
+ * @param {(selectedSlot: {start: string, end: string, price: number}) => void} onBooking - Callback invoked with the selected time slot when booking is confirmed.
+ * @returns {JSX.Element} The TurfDetailPage React element (a fixed, animated bottom-sheet with turf info and booking controls).
+ */
 export default function TurfDetailPage({ turf, onClose, onBooking }) {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [showSlotSelector, setShowSlotSelector] = useState(false);

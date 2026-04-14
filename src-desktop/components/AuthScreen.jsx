@@ -4,6 +4,15 @@ import { Mail, Lock, User, Briefcase, ArrowRight, Loader2, Trophy, Users } from 
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { cn } from '../lib/utils';
 
+/**
+ * Desktop authentication screen that lets users sign in, sign up, or start Google OAuth.
+ *
+ * Renders a sign-in / sign-up form with role selection, handles email/password authentication and signup confirmation flow, initiates Google OAuth with role-preserving redirect, and shows a guidance screen if Supabase environment variables are missing.
+ *
+ * @param {{ onAuthSuccess?: function }} props
+ * @param {function} [props.onAuthSuccess] - Optional callback invoked after a successful email/password sign-in.
+ * @returns {JSX.Element} The AuthScreen React component.
+ */
 export default function AuthScreen({ onAuthSuccess }) {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);

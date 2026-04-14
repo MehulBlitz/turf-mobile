@@ -5,6 +5,18 @@ import { cn } from '../lib/utils';
 import { validatePhone, validateFullName } from '../utils/validation';
 import AppAvatar from './common/AppAvatar';
 
+/**
+ * Render the customer's profile page with view and edit modes.
+ *
+ * Provides a UI to view profile information, toggle into an editable form, validate inputs, and submit updates.
+ *
+ * @param {Object} props
+ * @param {Object} props.profile - The current customer profile; may include `full_name`, `email`, `phone`, `preferred_city`, and `avatar_url`.
+ * @param {() => void} props.onClose - Called when the user requests to close or navigate back from the profile page.
+ * @param {(updatedData: { full_name?: string, phone?: string, preferred_city?: string, updated_at: string }) => Promise<any>} props.onUpdate - Called with the updated profile fields when the user saves changes. The component passes an `updated_at` ISO timestamp.
+ * @param {() => void} props.onLogout - Called when the user chooses to sign out.
+ * @returns {JSX.Element} The customer profile page component.
+ */
 export default function CustomerProfilePage({ profile, onClose, onUpdate, onLogout }) {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);

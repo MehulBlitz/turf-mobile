@@ -15,9 +15,10 @@ const twMerge = extendTailwindMerge({
 export const cx = twMerge;
 
 /**
- * This function does nothing besides helping us to be able to
- * sort the classes inside style objects which is not supported
- * by the Tailwind IntelliSense by default.
+ * Preserve a nested Tailwind classes object for type-safe passthrough to tooling.
+ *
+ * @param classes - A nested record whose values are class strings, numeric values, or further nested records of the same shape; typically used to represent grouped Tailwind class mappings.
+ * @returns The same `classes` object that was passed in.
  */
 export function sortCx<T extends Record<string, string | number | Record<string, string | number | Record<string, string | number>>>>(classes: T): T {
     return classes;

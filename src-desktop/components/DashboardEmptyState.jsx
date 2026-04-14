@@ -5,6 +5,23 @@ import { cn } from '../lib/utils';
 const noiseSvg = encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="2" stitchTiles="stitch"/></filter><rect width="180" height="180" filter="url(#n)" opacity="0.22"/></svg>');
 const noiseTexture = `url("data:image/svg+xml,${noiseSvg}")`;
 
+/**
+ * Render an animated empty-state card for dashboards with optional call-to-action.
+ *
+ * The card includes a decorative blurred glow and noise texture, an icon, title,
+ * message, and an optional action button that is rendered only when both
+ * `actionLabel` and `onAction` are provided.
+ *
+ * @param {Object} props
+ * @param {import('react').ComponentType<{size?: number}>} [props.icon=Sparkles] - Icon component displayed in the card.
+ * @param {string} [props.title='Nothing here yet'] - Heading text shown prominently.
+ * @param {string} [props.message='Try changing filters or adding new data.'] - Supporting message text.
+ * @param {import('react').ReactNode} [props.actionLabel] - Label or content for the action button.
+ * @param {() => void} [props.onAction] - Click handler for the action button.
+ * @param {string} [props.className] - Additional CSS class names applied to the root element.
+ * @param {boolean} [props.compact=false] - When true, uses reduced padding for a denser layout.
+ * @returns {import('react').JSX.Element} The rendered empty-state card element.
+ */
 export default function DashboardEmptyState({
   icon: Icon = Sparkles,
   title = 'Nothing here yet',
