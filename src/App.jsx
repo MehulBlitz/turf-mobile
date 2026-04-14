@@ -25,7 +25,7 @@ import {
   MessageCircle
 } from 'lucide-react';
 import { cn, formatCurrency } from './lib/utils';
-import { supabase, isSupabaseConfigured, createBookingWithTicket, createNotification, fetchNotificationsForUser, generateQrToken } from './lib/supabase';
+import { supabase, isSupabaseConfigured, createBookingWithTicket, createNotification, fetchNotificationsForUser, generateQrToken, recordBookingCancellation } from './lib/supabase';
 import AuthScreen from './components/AuthScreen';
 import OwnerDashboard from './components/OwnerDashboard';
 import AdminDashboard from './components/AdminDashboard';
@@ -274,7 +274,38 @@ function AppContent() {
       .select('*, turfs(*)')
       .eq('user_id', uid)
       .order('start_time', { ascending: false });
-    setBookings(data || []);
+
+    const now = new Date();
+    const expiredBookingIds = (data || [])
+      .filter((booking) =>
+        booking.status !== 'cancelled' &&
+        booking.status !== 'rejected' &&
+        booking.end_time &&
+        new Date(booking.end_time) < now &&
+        booking.booking_status !== 'time is gone'
+      )
+      .map((booking) => booking.id);
+
+    if (expiredBookingIds.length > 0) {
+      await supabase
+        .from('bookings')
+        .update({ booking_status: 'time is gone' })
+        .in('id', expiredBookingIds);
+    }
+
+    const normalizedBookings = (data || []).map((booking) => {
+      let booking_status = booking.booking_status || 'booked';
+      if (booking.status !== 'cancelled' && booking.status !== 'rejected') {
+        if (booking.end_time && new Date(booking.end_time) < now) {
+          booking_status = 'time is gone';
+        } else {
+          booking_status = 'booked';
+        }
+      }
+      return { ...booking, booking_status };
+    });
+
+    setBookings(normalizedBookings);
   }, []);
 
   const loadNotifications = useCallback(async (uid) => {
@@ -630,6 +661,7 @@ function AppContent() {
         .from('bookings')
         .update({
           status: 'cancelled',
+          booking_status: 'cancelled',
           cancellation_reason: reasonData.reason,
           cancellation_notes: reasonData.notes,
           refund_amount: reasonData.refund_amount,
@@ -646,6 +678,16 @@ function AppContent() {
         setSelectedCancellation(null);
         return;
       }
+
+      await recordBookingCancellation({
+        booking_id: selectedCancellation.id,
+        cancelled_by: 'customer',
+        actor_id: session.user.id,
+        cancellation_reason: reasonData.reason,
+        cancellation_notes: reasonData.notes,
+        refund_amount: reasonData.refund_amount,
+      });
+
       await fetchUserBookings(session.user.id);
       await createNotification({
         recipient_id: session.user.id,
@@ -769,7 +811,8 @@ function AppContent() {
         start_time: startTime.toISOString(),
         end_time: endTime.toISOString(),
         total_price: parseFloat(selectedSlot.price),
-        status: 'confirmed' // Set to confirmed directly as requested
+        status: 'confirmed', // Set to confirmed directly as requested
+        booking_status: 'booked',
       });
 
       setShowTicket({
@@ -932,11 +975,11 @@ function AppContent() {
                     <div className="flex items-center gap-2">
                       <span className={cn(
                         "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
-                        booking.status === 'confirmed' ? "bg-emerald-100 text-emerald-600" : 
-                        booking.status === 'pending' ? "bg-amber-100 text-amber-600" :
+                        booking.booking_status === 'booked' ? "bg-emerald-100 text-emerald-600" : 
+                        booking.booking_status === 'time is gone' ? "bg-amber-100 text-amber-600" :
                         "bg-red-100 text-red-600"
                       )}>
-                        {booking.status}
+                        {booking.booking_status || booking.status}
                       </span>
                       {booking.status !== 'cancelled' && booking.status !== 'rejected' && new Date(booking.start_time) > new Date() && (
                         <button

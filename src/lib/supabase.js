@@ -96,6 +96,7 @@ export const createBookingWithTicket = async (bookingData) => {
   const payload = {
     ...bookingData,
     qr_token: generateQrToken(),
+    booking_status: bookingData.booking_status || 'booked',
   };
   const { data, error } = await supabase
     .from('bookings')
@@ -123,6 +124,24 @@ export const fetchBookingById = async (bookingId) => {
     .from('bookings')
     .select('*, turfs(*)')
     .eq('id', bookingId)
+    .single();
+  handleError(error);
+  return data;
+};
+
+export const recordBookingCancellation = async (cancellationData) => {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
+  if (!cancellationData || !cancellationData.booking_id || !cancellationData.cancelled_by) throw new Error('Missing cancellation audit data.');
+
+  const payload = {
+    ...cancellationData,
+    cancelled_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabase
+    .from('booking_cancellations')
+    .insert(payload)
+    .select()
     .single();
   handleError(error);
   return data;

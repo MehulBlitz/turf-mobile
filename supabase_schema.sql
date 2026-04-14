@@ -38,6 +38,7 @@ create table if not exists bookings (
   turf_id uuid references turfs(id) on delete cascade,
   user_id uuid references profiles(id) on delete cascade, -- Changed to reference profiles(id) for easier joining
   qr_token text unique not null default gen_random_uuid(),
+  booking_status text check (booking_status in ('booked', 'time is gone', 'cancelled')) default 'booked',
   start_time timestamp with time zone not null,
   end_time timestamp with time zone not null,
   total_price numeric not null,
@@ -47,6 +48,18 @@ create table if not exists bookings (
   cancelled_by text check (cancelled_by in ('customer', 'owner')),
   refund_amount numeric default 0,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Cancellation log table for audit and ownership tracking
+create table if not exists booking_cancellations (
+  id uuid default gen_random_uuid() primary key,
+  booking_id uuid references bookings(id) on delete cascade,
+  cancelled_by text check (cancelled_by in ('customer', 'owner')) not null,
+  actor_id uuid references profiles(id),
+  cancellation_reason text,
+  cancellation_notes text,
+  refund_amount numeric default 0,
+  cancelled_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
 -- Notifications table for customers and owners
@@ -220,6 +233,10 @@ begin
     alter table bookings add column qr_token text unique not null default gen_random_uuid();
   end if;
 
+  if not exists (select 1 from information_schema.columns where table_name='bookings' and column_name='booking_status') then
+    alter table bookings add column booking_status text default 'booked';
+  end if;
+
   -- Update turfs type constraint
   alter table turfs drop constraint if exists turfs_type_check;
   alter table turfs add constraint turfs_type_check check (type in ('Football', 'Cricket', 'Tennis', 'Badminton', 'Multi-sport'));
@@ -227,6 +244,9 @@ begin
   -- Update bookings status constraint if needed
   alter table bookings drop constraint if exists bookings_status_check;
   alter table bookings add constraint bookings_status_check check (status in ('pending', 'confirmed', 'cancelled', 'rejected'));
+
+  alter table bookings drop constraint if exists bookings_booking_status_check;
+  alter table bookings add constraint bookings_booking_status_check check (booking_status in ('booked', 'time is gone', 'cancelled'));
 
   alter table bookings drop constraint if exists bookings_cancelled_by_check;
   alter table bookings add constraint bookings_cancelled_by_check check (cancelled_by in ('customer', 'owner'));

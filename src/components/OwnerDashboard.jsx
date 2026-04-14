@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { Plus, Edit2, Trash2, Calendar, Loader2, X, Upload, Clock, Database, Camera as CameraIcon } from 'lucide-react';
 import CancellationModal from './CancellationModal';
-import { createNotification, generateQrToken, supabase } from '../lib/supabase';
+import { createNotification, generateQrToken, recordBookingCancellation, supabase } from '../lib/supabase';
 import { cn, formatCurrency } from '../lib/utils';
 import { capturePhoto, pickPhotoFromGallery } from '../lib/capacitorPlugins';
 
@@ -84,7 +84,38 @@ export default function OwnerDashboard({ user, onTurfUpdate }) {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      setOwnerBookings(data || []);
+
+      const now = new Date();
+      const expiredBookingIds = (data || [])
+        .filter((booking) =>
+          booking.status !== 'cancelled' &&
+          booking.status !== 'rejected' &&
+          booking.end_time &&
+          new Date(booking.end_time) < now &&
+          booking.booking_status !== 'time is gone'
+        )
+        .map((booking) => booking.id);
+
+      if (expiredBookingIds.length > 0) {
+        await supabase
+          .from('bookings')
+          .update({ booking_status: 'time is gone' })
+          .in('id', expiredBookingIds);
+      }
+
+      const normalizedBookings = (data || []).map((booking) => {
+        let booking_status = booking.booking_status || 'booked';
+        if (booking.status !== 'cancelled' && booking.status !== 'rejected') {
+          if (booking.end_time && new Date(booking.end_time) < now) {
+            booking_status = 'time is gone';
+          } else {
+            booking_status = 'booked';
+          }
+        }
+        return { ...booking, booking_status };
+      });
+
+      setOwnerBookings(normalizedBookings);
     } catch (err) {
       console.error(err);
     }
@@ -364,6 +395,7 @@ export default function OwnerDashboard({ user, onTurfUpdate }) {
     try {
       const { error } = await supabase.from('bookings').update({
         status: 'cancelled',
+        booking_status: 'cancelled',
         cancellation_reason: reasonData.reason,
         cancellation_notes: reasonData.notes,
         refund_amount: reasonData.refund_amount,
@@ -371,6 +403,16 @@ export default function OwnerDashboard({ user, onTurfUpdate }) {
         qr_token: generateQrToken(),
       }).eq('id', booking.id);
       if (error) throw error;
+
+      await recordBookingCancellation({
+        booking_id: booking.id,
+        cancelled_by: 'owner',
+        actor_id: user.id,
+        cancellation_reason: reasonData.reason,
+        cancellation_notes: reasonData.notes,
+        refund_amount: reasonData.refund_amount,
+      });
+
       await createNotification({
         recipient_id: booking.user_id,
         sender_id: user.id,
