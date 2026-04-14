@@ -18,6 +18,21 @@ const REFUND_POLICY = {
   less_than_2h: 0   
 };
 
+/**
+ * Renders a three-step cancellation modal for a booking with refund calculation and submission.
+ *
+ * The modal walks the user through: (1) an irreversible cancellation confirmation, (2) selecting a cancellation reason
+ * (with optional notes for "Other"), and (3) a refund summary based on the booking start time and the module's refund policy.
+ * On final confirmation, the component invokes `onConfirm` with an object containing `{ reason, notes, refund_amount }`
+ * and calls `onClose` when the cancellation completes successfully. The component may show alerts for missing reason
+ * or errors returned by `onConfirm`.
+ *
+ * @param {Object} props
+ * @param {Object} props.booking - Booking data; expected fields used include `start_time`, `total_price`, and `turfs?.name`.
+ * @param {() => void} props.onClose - Callback invoked to close the modal.
+ * @param {(payload: {reason: string, notes: string, refund_amount: number}) => Promise<any>} props.onConfirm - Async callback invoked to perform the cancellation; receives the selected reason, optional notes, and the computed refund amount.
+ * @returns {JSX.Element} The cancellation modal component.
+ */
 export default function CancellationModal({ booking, onClose, onConfirm }) {
   const [step, setStep] = useState(1); // 1: confirm, 2: reason, 3: summary
   const [selectedReason, setSelectedReason] = useState(null);

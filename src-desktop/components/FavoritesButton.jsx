@@ -2,6 +2,19 @@ import React from 'react';
 import { Heart } from 'lucide-react';
 import { motion } from 'motion/react';
 
+/**
+ * Render an animated heart button that toggles a favorite state for a given turfId.
+ *
+ * The button animates the heart icon when favorited, applies red styling for the
+ * favorited state, and emits short-lived particle effects when a favorite is set.
+ *
+ * @param {Object} props
+ * @param {string|number} props.turfId - Identifier passed to the `onToggle` handler when the button is clicked.
+ * @param {boolean} props.isFavorited - Controls the heart's visual state and whether particle effects render.
+ * @param {(turfId: string|number) => void} props.onToggle - Callback invoked as `onToggle(turfId)` when the button is clicked.
+ * @param {string} [props.className=''] - Additional CSS classes appended to the button's root element.
+ * @returns {JSX.Element} A React element representing the favorites button.
+ */
 export default function FavoritesButton({ turfId, isFavorited, onToggle, className = '' }) {
   return (
     <motion.button

@@ -2,6 +2,16 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Star, MessageSquare } from 'lucide-react';
 import { fetchTurfComments, fetchTurfFeedback, submitTurfComment, submitTurfFeedback } from '../lib/supabase';
 
+/**
+ * Page component that displays and manages comments and star-rating feedback for a specific turf.
+ *
+ * @param {Object} props - Component props.
+ * @param {Object} props.user - Current user object (used for author id, display name/email, and avatar URL).
+ * @param {Object} props.turf - Turf object containing at least `id` and `name`.
+ * @param {Function} props.onBack - Callback invoked when the back button is pressed.
+ * @param {Function} [props.onFeedbackUpdate] - Optional callback invoked after successful comment or feedback submissions.
+ * @returns {JSX.Element} The rendered Turf feedback page.
+ */
 export default function TurfFeedbackPage({ user, turf, onBack, onFeedbackUpdate }) {
   const [comments, setComments] = useState([]);
   const [feedback, setFeedback] = useState([]);

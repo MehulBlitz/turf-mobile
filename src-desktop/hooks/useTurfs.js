@@ -1,6 +1,18 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
+/**
+ * React hook that manages the list of turfs and related loading/error state backed by Supabase.
+ *
+ * Exposes current turf data and utilities to update or reload it.
+ *
+ * @returns {{turfs: any[], setTurfs: function, loading: boolean, error: string|null, fetchTurfs: function}} An object containing:
+ *  - `turfs`: the current array of turf records.
+ *  - `setTurfs`: setter to replace the `turfs` array.
+ *  - `loading`: `true` while a fetch is in progress, otherwise `false`.
+ *  - `error`: a user-facing error message when a fetch has failed, or `null`.
+ *  - `fetchTurfs`: function that fetches turfs from Supabase and updates `turfs`, `loading`, and `error`.
+ */
 export function useTurfs() {
   const [turfs, setTurfs] = useState([]);
   const [loading, setLoading] = useState(false);
