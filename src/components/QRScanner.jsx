@@ -1,18 +1,79 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, CheckCircle2, AlertCircle, QrCode as QrCodeIcon, Camera, Image as ImageIcon } from 'lucide-react';
-import { capturePhoto, pickPhotoFromGallery } from '../lib/capacitorPlugins';
+import { capturePhoto, checkCameraPermission, pickPhotoFromGallery, requestCameraPermission } from '../lib/capacitorPlugins';
 import { fetchBookingById, fetchBookingByQrToken, supabase } from '../lib/supabase';
 import { formatCurrency } from '../lib/utils';
 import jsQR from 'jsqr';
+import { Html5Qrcode } from 'html5-qrcode';
 
 export default function QRScanner({ onClose }) {
   const [scannedData, setScannedData] = useState(null);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLiveScanning, setIsLiveScanning] = useState(false);
+  const [liveScanError, setLiveScanError] = useState(null);
+
+  const scannerRef = useRef(null);
+  const html5QrRef = useRef(null);
 
   const isUuid = (value) => {
     return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89abAB][0-9a-f]{3}-[0-9a-f]{12}$/.test(value);
+  };
+
+  const parseBookingPayload = (rawData) => {
+    if (!rawData) return {};
+
+    const trimmedData = rawData.trim();
+    if (isUuid(trimmedData)) {
+      return { bookingId: trimmedData };
+    }
+
+    try {
+      const parsed = JSON.parse(trimmedData);
+      if (parsed && typeof parsed === 'object') {
+        return parsed;
+      }
+    } catch {
+      // not JSON
+    }
+
+    if (/^https?:\/\//i.test(trimmedData)) {
+      try {
+        const url = new URL(trimmedData);
+        const bookingId = url.searchParams.get('bookingId') || url.searchParams.get('id');
+        const qrToken = url.searchParams.get('qrToken') || url.searchParams.get('token');
+        if (bookingId || qrToken) {
+          return { bookingId, qrToken };
+        }
+
+        const segments = url.pathname.split('/').filter(Boolean);
+        const lastSegment = segments[segments.length - 1];
+        if (isUuid(lastSegment)) {
+          return { bookingId: lastSegment };
+        }
+      } catch {
+        // invalid URL
+      }
+    }
+
+    const bookingMatch = trimmedData.match(/booking(?:Id|_id)?[:=]?\s*([0-9a-f-]{36})/i);
+    if (bookingMatch) {
+      return { bookingId: bookingMatch[1] };
+    }
+
+    return { raw: trimmedData };
+  };
+
+  const lookupBooking = async (rawData) => {
+    const parsed = parseBookingPayload(rawData);
+    if (parsed.qrToken) {
+      return fetchBookingByQrToken(parsed.qrToken);
+    }
+    if (parsed.bookingId) {
+      return fetchBookingById(parsed.bookingId);
+    }
+    return null;
   };
 
   const scanQRFromPhoto = (photoUrl) => {
@@ -35,21 +96,7 @@ export default function QRScanner({ onClose }) {
 
           if (code) {
             const rawData = code.data;
-            let parsed = null;
-            try {
-              parsed = JSON.parse(rawData);
-            } catch {
-              parsed = null;
-            }
-
-            let booking = null;
-            if (parsed?.qrToken) {
-              booking = await fetchBookingByQrToken(parsed.qrToken);
-            } else if (parsed?.bookingId) {
-              booking = await fetchBookingById(parsed.bookingId);
-            } else if (isUuid(rawData)) {
-              booking = await fetchBookingById(rawData);
-            }
+            const booking = await lookupBooking(rawData);
 
             if (booking) {
               const currentUser = await supabase.auth.getUser();
@@ -137,9 +184,89 @@ export default function QRScanner({ onClose }) {
     }
   };
 
+  const stopLiveScan = async () => {
+    if (html5QrRef.current) {
+      try {
+        await html5QrRef.current.stop();
+        await html5QrRef.current.clear();
+      } catch (err) {
+        console.warn('Error stopping live QR scanner:', err);
+      }
+      html5QrRef.current = null;
+    }
+    setIsLiveScanning(false);
+  };
+
+  const handleStartLiveScan = async () => {
+    setError(null);
+    setLiveScanError(null);
+
+    try {
+      const permissions = await checkCameraPermission();
+      if (permissions.camera !== 'granted') {
+        const requested = await requestCameraPermission();
+        if (requested.camera !== 'granted') {
+          throw new Error('Camera permission is required for live scanning.');
+        }
+      }
+
+      const cameras = await Html5Qrcode.getCameras();
+      if (!cameras || cameras.length === 0) {
+        throw new Error('No camera device found.');
+      }
+
+      const cameraId = cameras[0].id;
+      const html5Qr = new Html5Qrcode('html5qr-reader');
+      html5QrRef.current = html5Qr;
+      setIsLiveScanning(true);
+
+      await html5Qr.start(
+        cameraId,
+        {
+          fps: 10,
+          qrbox: { width: 280, height: 280 },
+        },
+        async (decodedText) => {
+          await stopLiveScan();
+          const booking = await lookupBooking(decodedText);
+          if (booking) {
+            const currentUser = await supabase.auth.getUser();
+            const ownsTicket = currentUser?.data?.user?.id === booking.user_id;
+            setScannedData({
+              id: booking.id,
+              turf: booking.turfs?.name,
+              date: booking.start_time,
+              time: `${new Date(booking.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(booking.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+              amount: booking.total_price,
+              status: booking.status,
+              ownsTicket,
+              raw: decodedText,
+            });
+          } else {
+            setLiveScanError('QR scanned but booking was not found.');
+          }
+        },
+        (errorMessage) => {
+          setLiveScanError(errorMessage);
+        }
+      );
+    } catch (err) {
+      console.error('Live scan error:', err);
+      setLiveScanError(err.message || 'Could not start camera scanner.');
+      setIsLiveScanning(false);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      stopLiveScan();
+    };
+  }, []);
+
   const handleRescan = () => {
     setScannedData(null);
     setError(null);
+    setLiveScanError(null);
   };
 
   const handleClose = () => {
@@ -185,9 +312,23 @@ export default function QRScanner({ onClose }) {
                     </div>
                     <div className="text-center">
                       <p className="text-sm text-zinc-600 font-medium">Capture or select a photo with QR code</p>
-                      <p className="text-xs text-zinc-400 mt-2">The system will scan automatically</p>
+                      <p className="text-xs text-zinc-400 mt-2">The system will scan automatically.</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    {isLiveScanning && (
+                      <div className="space-y-3">
+                        <div id="html5qr-reader" className="w-full h-72 rounded-3xl overflow-hidden bg-black" />
+                        <button
+                          onClick={stopLiveScan}
+                          className="w-full py-3 bg-red-500 text-white rounded-2xl font-bold active:scale-95 transition-all"
+                        >
+                          Stop Live Scan
+                        </button>
+                        {liveScanError && (
+                          <p className="text-xs text-red-600">{liveScanError}</p>
+                        )}
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 gap-3">
                       <button
                         onClick={handleCapturePhoto}
                         disabled={isLoading}
@@ -203,6 +344,14 @@ export default function QRScanner({ onClose }) {
                       >
                         <ImageIcon size={18} />
                         <span className="text-sm">Gallery</span>
+                      </button>
+                      <button
+                        onClick={handleStartLiveScan}
+                        disabled={isLiveScanning}
+                        className="py-4 bg-zinc-900 text-white rounded-2xl font-bold shadow-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        <QrCodeIcon size={18} />
+                        <span className="text-sm">Live Scan</span>
                       </button>
                     </div>
                   </>

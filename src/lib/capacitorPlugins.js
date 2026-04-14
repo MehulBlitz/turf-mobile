@@ -1,7 +1,7 @@
 // src/lib/capacitorPlugins.js
 // Helper functions to use Capacitor plugins in your Turf Booking app
 
-import { Camera, CameraResultType } from '@capacitor/camera';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Geolocation } from '@capacitor/geolocation';
 import { Network } from '@capacitor/network';
 import { App } from '@capacitor/app';
@@ -11,12 +11,38 @@ import { Toast } from '@capacitor/toast';
 /**
  * Camera Functions
  */
+export const checkCameraPermission = async () => {
+  try {
+    const permissions = await Camera.checkPermissions();
+    return permissions;
+  } catch (error) {
+    console.error('Check camera permission error:', error);
+    return { camera: 'denied' };
+  }
+};
+
+export const requestCameraPermission = async () => {
+  try {
+    const result = await Camera.requestPermissions();
+    return result;
+  } catch (error) {
+    console.error('Request camera permission error:', error);
+    return { camera: 'denied' };
+  }
+};
+
 export const capturePhoto = async () => {
   try {
+    const permissions = await requestCameraPermission();
+    if (permissions.camera !== 'granted') {
+      throw new Error('Camera permission was not granted.');
+    }
+
     const image = await Camera.getPhoto({
       quality: 90,
       allowEditing: true,
       resultType: CameraResultType.Uri,
+      source: CameraSource.Camera,
     });
     return image.webPath;
   } catch (error) {
@@ -31,7 +57,7 @@ export const pickPhotoFromGallery = async () => {
       quality: 90,
       allowEditing: false,
       resultType: CameraResultType.Uri,
-      source: 'Photos',
+      source: CameraSource.Photos,
     });
     return image.webPath;
   } catch (error) {
