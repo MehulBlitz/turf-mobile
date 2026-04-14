@@ -747,6 +747,12 @@ function AppContent() {
       });
 
       await fetchUserBookings(session.user.id);
+      if (selectedTurf && selectedCancellation.turf_id === selectedTurf.id) {
+        const bookingDate = selectedCancellation.start_time?.slice(0, 10);
+        if (bookingDate === selectedDate) {
+          await fetchBookedSlots(selectedTurf.id, selectedDate);
+        }
+      }
       await createNotification({
         recipient_id: session.user.id,
         sender_id: session.user.id,
