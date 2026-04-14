@@ -393,7 +393,7 @@ export default function OwnerDashboard({ user, onTurfUpdate }) {
   const handleBookingCancellation = async (booking, reasonData) => {
     setCancelProcessing(true);
     try {
-      const { error } = await supabase.from('bookings').update({
+      const { data, error } = await supabase.from('bookings').update({
         status: 'cancelled',
         booking_status: 'cancelled',
         cancellation_reason: reasonData.reason,
@@ -401,8 +401,18 @@ export default function OwnerDashboard({ user, onTurfUpdate }) {
         refund_amount: reasonData.refund_amount,
         cancelled_by: 'owner',
         qr_token: generateQrToken(),
-      }).eq('id', booking.id);
+      })
+      .match({ id: booking.id })
+      .not('status', 'eq', 'cancelled')
+      .not('status', 'eq', 'rejected')
+      .select()
+      .maybeSingle();
       if (error) throw error;
+      if (!data) {
+        alert('This booking is no longer eligible for cancellation.');
+        setSelectedCancelBooking(null);
+        return;
+      }
 
       await recordBookingCancellation({
         booking_id: booking.id,
