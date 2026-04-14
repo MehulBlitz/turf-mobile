@@ -11,6 +11,10 @@ export default function QRScanner({ onClose }) {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const isUuid = (value) => {
+    return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89abAB][0-9a-f]{3}-[0-9a-f]{12}$/.test(value);
+  };
+
   const scanQRFromPhoto = (photoUrl) => {
     return new Promise((resolve) => {
       const img = new window.Image();
@@ -38,32 +42,33 @@ export default function QRScanner({ onClose }) {
               parsed = null;
             }
 
-            if (parsed?.qrToken || parsed?.bookingId) {
-              const booking = parsed.qrToken
-                ? await fetchBookingByQrToken(parsed.qrToken)
-                : await fetchBookingById(parsed.bookingId);
+            let booking = null;
+            if (parsed?.qrToken) {
+              booking = await fetchBookingByQrToken(parsed.qrToken);
+            } else if (parsed?.bookingId) {
+              booking = await fetchBookingById(parsed.bookingId);
+            } else if (isUuid(rawData)) {
+              booking = await fetchBookingById(rawData);
+            }
 
-              if (booking) {
-                const currentUser = await supabase.auth.getUser();
-                const ownsTicket = currentUser?.data?.user?.id === booking.user_id;
+            if (booking) {
+              const currentUser = await supabase.auth.getUser();
+              const ownsTicket = currentUser?.data?.user?.id === booking.user_id;
 
-                setScannedData({
-                  id: booking.id,
-                  turf: booking.turfs?.name,
-                  date: booking.start_time,
-                  time: `${new Date(booking.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(booking.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-                  amount: booking.total_price,
-                  status: booking.status,
-                  ownsTicket,
-                  raw: rawData,
-                });
-              } else {
-                setError('This ticket could not be found or is not accessible from this account.');
-              }
+              setScannedData({
+                id: booking.id,
+                turf: booking.turfs?.name,
+                date: booking.start_time,
+                time: `${new Date(booking.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(booking.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+                amount: booking.total_price,
+                status: booking.status,
+                ownsTicket,
+                raw: rawData,
+              });
             } else if (rawData) {
               setScannedData({
                 raw: rawData,
-                id: rawData.substring(0, 8),
+                id: isUuid(rawData) ? rawData : rawData.substring(0, 8),
               });
             } else {
               setError('No QR code found in image. Try again with a clearer photo.');

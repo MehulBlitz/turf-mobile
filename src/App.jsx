@@ -62,6 +62,7 @@ function AppContent() {
   const [selectedCity, setSelectedCity] = useState('Nearby');
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isUpdatingRole, setIsUpdatingRole] = useState(false);
   const [priceRange, setPriceRange] = useState([0, 5000]);
   const [filterCategories, setFilterCategories] = useState([]);
   const [minRating, setMinRating] = useState(0);
@@ -131,6 +132,41 @@ function AppContent() {
           }
         );
       }
+    }
+  };
+
+  const handleBecomeOwner = async () => {
+    if (!session?.user?.id) return alert('Please sign in to become a turf owner.');
+    if (profile?.role === 'owner') return alert('You are already a turf owner.');
+
+    setIsUpdatingRole(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: 'owner', updated_at: new Date().toISOString() })
+        .eq('id', session.user.id);
+      if (error) throw error;
+
+      const updatedProfile = { ...profile, role: 'owner' };
+      setProfile(updatedProfile);
+
+      if (isFirebaseConfigured) {
+        const updatedFirebaseProfile = await saveFirebaseProfile(session.user.id, {
+          ...firebaseProfile,
+          role: 'owner',
+        });
+        if (updatedFirebaseProfile) {
+          setFirebaseProfile(updatedFirebaseProfile);
+        }
+      }
+
+      alert('You are now a turf owner. Your owner dashboard is now available.');
+      setIsSettingsOpen(false);
+      fetchProfile(session.user.id, session.user);
+    } catch (err) {
+      alert(err.message || 'Failed to change role. Please try again.');
+    } finally {
+      setIsUpdatingRole(false);
     }
   };
 
@@ -1063,6 +1099,32 @@ function AppContent() {
                       </div>
                       <div className="w-12 h-6 rounded-full bg-emerald-500 relative">
                         <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-white shadow-sm" />
+                      </div>
+                    </div>
+
+                    <div className="rounded-3xl bg-zinc-50 p-4 border border-zinc-100">
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <p className="font-bold text-zinc-900">Become a Turf Owner</p>
+                          <p className="text-xs text-zinc-500">
+                            {profile?.role === 'owner' || firebaseProfile?.role === 'owner'
+                              ? 'Your account already has owner access.'
+                              : 'Opt in to become a turf owner and manage your turf listing.'}
+                          </p>
+                        </div>
+                        <button
+                          disabled={isUpdatingRole || profile?.role === 'owner' || firebaseProfile?.role === 'owner'}
+                          onClick={handleBecomeOwner}
+                          className={`px-4 py-2 rounded-2xl font-bold transition-all ${profile?.role === 'owner' || firebaseProfile?.role === 'owner'
+                            ? 'bg-zinc-200 text-zinc-500 cursor-not-allowed'
+                            : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
+                        >
+                          {profile?.role === 'owner' || firebaseProfile?.role === 'owner'
+                            ? 'Owner'
+                            : isUpdatingRole
+                              ? 'Updating...'
+                              : 'Become Owner'}
+                        </button>
                       </div>
                     </div>
 
