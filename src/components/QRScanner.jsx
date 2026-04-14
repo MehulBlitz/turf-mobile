@@ -313,23 +313,30 @@ export default function QRScanner({ onClose }) {
               <div className="space-y-4">
                 {!error ? (
                   <>
-                    <div className="rounded-2xl bg-gradient-to-br from-zinc-800 to-black flex items-center justify-center border-4 border-emerald-300 aspect-square">
-                      <Camera size={48} className="text-emerald-300 opacity-50" />
-                    </div>
+                    {isLiveScanning ? (
+                      <div className="rounded-2xl border-4 border-emerald-300 aspect-square overflow-hidden bg-black">
+                        <video ref={videoRef} className="w-full h-full object-cover" muted playsInline autoPlay />
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl bg-gradient-to-br from-zinc-800 to-black flex items-center justify-center border-4 border-emerald-300 aspect-square">
+                        <Camera size={48} className="text-emerald-300 opacity-50" />
+                      </div>
+                    )}
                     <div className="text-center">
-                      <p className="text-sm text-zinc-600 font-medium">Capture or select a photo with QR code</p>
-                      <p className="text-xs text-zinc-400 mt-2">The system will scan automatically.</p>
+                      <p className="text-sm text-zinc-600 font-medium">
+                        {isLiveScanning ? 'Point camera at QR code to scan live' : 'Capture or select a photo with QR code'}
+                      </p>
+                      <p className="text-xs text-zinc-400 mt-2">
+                        {isLiveScanning ? 'Keep the code centered inside the frame.' : 'The system will scan automatically.'}
+                      </p>
                     </div>
                     {isLiveScanning && (
-                      <div className="space-y-3">
-                        <video ref={videoRef} className="w-full h-72 rounded-3xl overflow-hidden bg-black" muted playsInline />
-                        <button
-                          onClick={stopLiveScan}
-                          className="w-full py-3 bg-red-500 text-white rounded-2xl font-bold active:scale-95 transition-all"
-                        >
-                          Stop Live Scan
-                        </button>
-                      </div>
+                      <button
+                        onClick={stopLiveScan}
+                        className="w-full py-3 bg-red-500 text-white rounded-2xl font-bold active:scale-95 transition-all"
+                      >
+                        Stop Live Scan
+                      </button>
                     )}
                     <div className="grid grid-cols-1 gap-3">
                       <button
