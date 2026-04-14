@@ -4,7 +4,7 @@ import { X, CheckCircle2, AlertCircle, QrCode as QrCodeIcon, Camera, Image as Im
 import { capturePhoto, checkCameraPermission, pickPhotoFromGallery, requestCameraPermission } from '../lib/capacitorPlugins';
 import { fetchBookingById, fetchBookingByQrToken, supabase } from '../lib/supabase';
 import { formatCurrency } from '../lib/utils';
-import { Html5Qrcode } from 'html5-qrcode';
+import { BrowserMultiFormatReader } from '@zxing/browser';
 
 export default function QRScanner({ onClose }) {
   const [scannedData, setScannedData] = useState(null);
@@ -13,8 +13,8 @@ export default function QRScanner({ onClose }) {
   const [isLiveScanning, setIsLiveScanning] = useState(false);
   const [liveScanError, setLiveScanError] = useState(null);
 
-  const scannerRef = useRef(null);
-  const html5QrRef = useRef(null);
+  const codeReaderRef = useRef(null);
+  const videoRef = useRef(null);
 
   const isUuid = (value) => {
     return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89abAB][0-9a-f]{3}-[0-9a-f]{12}$/.test(value);
@@ -75,15 +75,27 @@ export default function QRScanner({ onClose }) {
     return null;
   };
 
+  const getCodeReader = () => {
+    if (!codeReaderRef.current) {
+      codeReaderRef.current = new BrowserMultiFormatReader();
+    }
+    return codeReaderRef.current;
+  };
+
   const scanQRFromPhoto = async (photoUrl) => {
     try {
-      const result = await Html5Qrcode.scanFile(photoUrl, true);
-      if (!result) {
+      const image = document.createElement('img');
+      image.src = photoUrl;
+      await image.decode();
+
+      const codeReader = getCodeReader();
+      const result = await codeReader.decodeFromImageElement(image);
+      if (!result?.text) {
         setError('No QR code found in image. Try again with a clearer photo.');
         return;
       }
 
-      const booking = await lookupBooking(result);
+      const booking = await lookupBooking(result.text);
       if (booking) {
         const currentUser = await supabase.auth.getUser();
         const ownsTicket = currentUser?.data?.user?.id === booking.user_id;
@@ -96,17 +108,17 @@ export default function QRScanner({ onClose }) {
           amount: booking.total_price,
           status: booking.status,
           ownsTicket,
-          raw: result,
+          raw: result.text,
         });
       } else {
         setScannedData({
-          raw: result,
-          id: isUuid(result) ? result : result.substring(0, 8),
+          raw: result.text,
+          id: isUuid(result.text) ? result.text : result.text.substring(0, 8),
         });
       }
     } catch (err) {
       console.error('QR scan from photo error:', err);
-      setError('Failed to scan QR code from photo. Try a clearer image or a different angle.');
+      setError('Failed to scan QR code from image. Try a clearer image or a different angle.');
     } finally {
       setIsLoading(false);
     }
@@ -151,14 +163,13 @@ export default function QRScanner({ onClose }) {
   };
 
   const stopLiveScan = async () => {
-    if (html5QrRef.current) {
+    if (codeReaderRef.current) {
       try {
-        await html5QrRef.current.stop();
-        await html5QrRef.current.clear();
+        await codeReaderRef.current.reset();
       } catch (err) {
         console.warn('Error stopping live QR scanner:', err);
       }
-      html5QrRef.current = null;
+      codeReaderRef.current = null;
     }
     setIsLiveScanning(false);
   };
@@ -176,24 +187,18 @@ export default function QRScanner({ onClose }) {
         }
       }
 
-      const cameras = await Html5Qrcode.getCameras();
-      if (!cameras || cameras.length === 0) {
-        throw new Error('No camera device found.');
+      const codeReader = getCodeReader();
+      const videoElement = videoRef.current;
+      if (!videoElement) {
+        throw new Error('QR scan video element is not available.');
       }
 
-      const cameraId = cameras[0].id;
-      const html5Qr = new Html5Qrcode('html5qr-reader');
-      html5QrRef.current = html5Qr;
       setIsLiveScanning(true);
 
-      await html5Qr.start(
-        cameraId,
-        {
-          fps: 10,
-          qrbox: { width: 280, height: 280 },
-        },
-        async (decodedText) => {
+      await codeReader.decodeFromVideoDevice(null, videoElement, async (result, error) => {
+        if (result) {
           await stopLiveScan();
+          const decodedText = result.getText();
           const booking = await lookupBooking(decodedText);
           if (booking) {
             const currentUser = await supabase.auth.getUser();
@@ -211,11 +216,10 @@ export default function QRScanner({ onClose }) {
           } else {
             setLiveScanError('QR scanned but booking was not found.');
           }
-        },
-        (errorMessage) => {
-          setLiveScanError(errorMessage);
+        } else if (error) {
+          setLiveScanError(error.message || 'Scanning failed.');
         }
-      );
+      });
     } catch (err) {
       console.error('Live scan error:', err);
       setLiveScanError(err.message || 'Could not start camera scanner.');
@@ -282,7 +286,7 @@ export default function QRScanner({ onClose }) {
                     </div>
                     {isLiveScanning && (
                       <div className="space-y-3">
-                        <div id="html5qr-reader" className="w-full h-72 rounded-3xl overflow-hidden bg-black" />
+                        <video ref={videoRef} className="w-full h-72 rounded-3xl overflow-hidden bg-black" muted playsInline />
                         <button
                           onClick={stopLiveScan}
                           className="w-full py-3 bg-red-500 text-white rounded-2xl font-bold active:scale-95 transition-all"
