@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Home,
@@ -83,8 +83,51 @@ function AppContent() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [selectedCancellation, setSelectedCancellation] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isPulling, setIsPulling] = useState(false);
+  const pullStartYRef = useRef(null);
 
   const popularCities = ['Hyderabad', 'Mumbai', 'Bangalore', 'Delhi', 'Chennai', 'Pune', 'Kolkata', 'Ahmedabad'];
+
+  const resetPull = () => {
+    setIsPulling(false);
+    setPullDistance(0);
+    pullStartYRef.current = null;
+  };
+
+  const handleTouchStart = (e) => {
+    if (isRefreshing) return;
+    const container = e.currentTarget;
+    if (container.scrollTop <= 0) {
+      pullStartYRef.current = e.touches[0].clientY;
+      setIsPulling(true);
+      setPullDistance(0);
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isPulling || pullStartYRef.current === null) return;
+    const distance = e.touches[0].clientY - pullStartYRef.current;
+    if (distance > 0) {
+      e.preventDefault();
+      setPullDistance(Math.min(distance, 120));
+    } else {
+      setPullDistance(0);
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (!isPulling) return;
+    const shouldRefresh = pullDistance >= 80;
+    resetPull();
+    if (shouldRefresh && session) {
+      setIsRefreshing(true);
+      await fetchUserBookings(session.user.id);
+      await loadNotifications(session.user.id);
+      setIsRefreshing(false);
+    }
+  };
 
   const detectLocation = async () => {
     try {
@@ -1690,7 +1733,19 @@ function AppContent() {
 
   return (
     <div className="bg-zinc-100 min-h-screen font-sans">
-      <div className="mobile-container overflow-y-auto">
+      <div
+        className="mobile-container overflow-y-auto"
+        style={{ touchAction: 'pan-y' }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div
+          className="flex items-center justify-center text-xs text-zinc-500 transition-all duration-200"
+          style={{ height: pullDistance > 0 || isRefreshing ? 40 : 0, opacity: pullDistance > 0 || isRefreshing ? 1 : 0 }}
+        >
+          {isRefreshing ? 'Refreshing...' : pullDistance >= 80 ? 'Release to refresh' : 'Pull down to refresh'}
+        </div>
         {showRotateWarning && (
           <div className="mx-6 mt-6 p-4 rounded-3xl bg-yellow-50 border border-yellow-200 text-yellow-900 text-sm shadow-sm text-center">
             For the best experience, rotate your phone back to portrait mode. The app is optimized for mobile portrait view.
