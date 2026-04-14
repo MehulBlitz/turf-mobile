@@ -25,6 +25,8 @@ jobs:
     env:
       VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
       VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      HAS_IOS_PROVISIONING_PROFILE: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 != '' }}
+      HAS_IOS_SIGNING_CERTIFICATE: ${{ secrets.IOS_SIGNING_CERTIFICATE_BASE64 != '' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -74,14 +76,14 @@ jobs:
         shell: bash
 
       - name: Import provisioning profile for signing
-        if: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 != '' }}
+        if: env.HAS_IOS_PROVISIONING_PROFILE == 'true'
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles/
           echo "${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
         shell: bash
 
       - name: Import code signing certificate
-        if: ${{ secrets.IOS_SIGNING_CERTIFICATE_BASE64 != '' }}
+        if: env.HAS_IOS_SIGNING_CERTIFICATE == 'true'
         env:
           CERTIFICATE_PATH: ${{ runner.temp }}/certificate.p12
           KEYCHAIN_PATH: ${{ runner.temp }}/app-signing.keychain-db
