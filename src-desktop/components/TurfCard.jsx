@@ -3,6 +3,20 @@ import { motion } from 'motion/react';
 import { Star } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
 
+/**
+ * Renders a clickable turf card showing an image, rating badge, type label, name, and hourly price.
+ *
+ * @param {object} turf - Turf data used to populate the card. Expected properties:
+ *   - id: unique identifier used for shared layout animations
+ *   - image_url: source URL for the card image
+ *   - name: turf display name (also used as image alt text)
+ *   - rating: optional rating value; falls back to '4.8' if falsy
+ *   - type: label text shown on the type badge
+ *   - price_per_hour: numeric value passed to `formatCurrency` for display
+ * @param {function} onClick - Click handler invoked when the card is clicked.
+ * @param {string} [className=''] - Optional additional CSS classes to merge into the root element.
+ * @returns {JSX.Element} The rendered TurfCard React element.
+ */
 export default function TurfCard({ turf, onClick, className = '' }) {
   return (
     <motion.div

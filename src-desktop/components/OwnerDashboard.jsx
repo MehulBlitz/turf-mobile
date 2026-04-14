@@ -12,6 +12,16 @@ const AMENITIES = ['Parking', 'Changing Rooms', 'Showers', 'Floodlights', 'Drink
 const GAMES = ['Football', 'Cricket', 'Tennis', 'Badminton', 'Basketball', 'Volleyball'];
 const POPULAR_CITIES = ['Hyderabad', 'Mumbai', 'Bangalore', 'Delhi', 'Chennai', 'Pune', 'Kolkata', 'Ahmedabad'];
 
+/**
+ * Owner dashboard UI for managing turfs, bookings, media, and analytics.
+ *
+ * Renders a three-tab interface ("My Turfs", "Bookings", "Analytics") that allows an owner to view and edit their turfs, handle booking confirmations/rejections/cancellations, upload turf media, and view aggregated owner metrics.
+ *
+ * @param {Object} props
+ * @param {Object} props.user - Current authenticated user object (used to scope turfs, bookings, and storage paths).
+ * @param {Function} [props.onTurfUpdate] - Optional callback invoked after a turf is created or updated.
+ * @returns {JSX.Element} The OwnerDashboard component UI.
+ */
 export default function OwnerDashboard({ user, onTurfUpdate }) {
   const [turfs, setTurfs] = useState([]);
   const [loading, setLoading] = useState(true);

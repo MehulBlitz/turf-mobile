@@ -1,8 +1,18 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Clock, DollarSign, CalendarDays } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import DashboardEmptyState from './DashboardEmptyState';
 
+/**
+ * Render a month-view bookings calendar with selectable dates and a detail panel showing bookings.
+ *
+ * Fetches and normalizes the specified user's bookings from Supabase when `userId` changes, highlights days
+ * that have bookings, provides month navigation, and displays booking summary statistics and per-day booking cards.
+ *
+ * @param {Object} props
+ * @param {string|number|null|undefined} props.userId - ID of the user whose bookings should be displayed; when falsy, no bookings are loaded.
+ * @returns {JSX.Element} The bookings calendar UI component.
+ */
 export default function BookingsCalendar({ userId }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [bookings, setBookings] = useState([]);

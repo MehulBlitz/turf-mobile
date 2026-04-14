@@ -4,6 +4,29 @@ import { ArrowLeft, CheckCircle2, Share2, Download, Copy, QrCode } from 'lucide-
 import { formatCurrency } from '../lib/utils';
 import jsPDF from 'jspdf';
 
+/**
+ * Renders a full-screen booking ticket modal when a booking object is provided.
+ *
+ * Displays booking details (turf, date, time, amount, ID), a QR section with toggle,
+ * cancellation details when applicable, and actions to share, save (PDF), copy the ID, or close the modal.
+ *
+ * @param {{ showTicket: {
+ *   id: string,
+ *   turf: { name: string },
+ *   date: string|number,
+ *   slot: { start: string, end: string },
+ *   total_price: number,
+ *   qr_token?: string,
+ *   status?: string,
+ *   cancellation_reason?: string,
+ *   cancellation_notes?: string,
+ *   cancelled_by?: string,
+ *   refund_amount?: number
+ * } , onClose: Function }} props - Component props.
+ * @param {object} props.showTicket - Booking object used to populate the modal.
+ * @param {Function} props.onClose - Callback invoked to close the modal.
+ * @returns {JSX.Element|null} The rendered modal element when `showTicket` is provided, or `null` otherwise.
+ */
 export default function TicketModal({ showTicket, onClose }) {
   const [showQR, setShowQR] = useState(true);
 

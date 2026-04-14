@@ -4,6 +4,15 @@ import { supabase } from '../lib/supabase';
 import { cn, formatCurrency } from '../lib/utils';
 import AppAvatar from './common/AppAvatar';
 
+/**
+ * Render the admin dashboard UI with tabs for overview, bookings, turfs, and users.
+ *
+ * The component loads aggregated admin data from Supabase (counts, recent bookings, turfs, revenue,
+ * and pending bookings), exposes a Refresh action, provides booking filters, and allows deleting turfs.
+ * It also shows a recent activity preview and contextual status badges.
+ *
+ * @returns {JSX.Element} The admin dashboard React element.
+ */
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ users: 0, turfs: 0, bookings: 0, revenue: 0, pendingBookings: 0 });
   const [loading, setLoading] = useState(true);

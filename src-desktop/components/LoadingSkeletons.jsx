@@ -1,6 +1,11 @@
 import React from 'react';
 import { motion } from 'motion/react';
 
+/**
+ * Renders a card-shaped loading skeleton for a turf item with an image placeholder and text-like bars.
+ *
+ * @returns {JSX.Element} A styled skeleton card element containing a top rectangular placeholder and multiple horizontal text placeholders using pulse animation.
+ */
 export function TurfCardSkeleton() {
   return (
     <div className="bg-white rounded-[2.5rem] overflow-hidden border border-zinc-100 shadow-sm animate-pulse">
@@ -16,6 +21,11 @@ export function TurfCardSkeleton() {
   );
 }
 
+/**
+ * Render a skeleton-style booking card placeholder used during loading.
+ *
+ * @returns {JSX.Element} A JSX element representing a pulsing booking-card skeleton with an avatar block and text placeholder lines.
+ */
 export function BookingCardSkeleton() {
   return (
     <div className="bg-white p-4 rounded-3xl border border-zinc-100 shadow-sm animate-pulse">
@@ -31,6 +41,11 @@ export function BookingCardSkeleton() {
   );
 }
 
+/**
+ * Renders a vertical stack of three TurfCardSkeleton placeholder cards for loading states.
+ *
+ * @returns {JSX.Element} A container element with three stacked TurfCardSkeleton components.
+ */
 export function TurfListSkeleton() {
   return (
     <div className="space-y-5">
@@ -41,6 +56,14 @@ export function TurfListSkeleton() {
   );
 }
 
+/**
+ * Render a two-column grid of four statistic loading skeleton cards.
+ *
+ * Each card is a placeholder tile representing a statistic (icon block and two text bars)
+ * and is intended for use while data is loading.
+ *
+ * @returns {JSX.Element} A container element with four skeleton statistic cards arranged in two columns.
+ */
 export function StatsSkeleton() {
   return (
     <div className="grid grid-cols-2 gap-4">

@@ -7,6 +7,24 @@ const CATEGORIES = ['Football', 'Cricket', 'Tennis', 'Badminton', 'Multi-sport']
 const AMENITIES_LIST = ['Parking', 'Changing Rooms', 'Showers', 'Floodlights', 'Drinking Water', 'First Aid', 'WiFi', 'Cafeteria'];
 const POPULAR_CITIES = ['Hyderabad', 'Mumbai', 'Bangalore', 'Delhi', 'Chennai', 'Pune', 'Kolkata', 'Ahmedabad'];
 
+/**
+ * Renders a toggleable filters panel for searching—controls price range, city, sport categories, minimum rating, and amenities, and exposes actions to apply or clear filters.
+ *
+ * @param {{number: any}} props - Component props.
+ * @param {[number, number]} props.priceRange - Two-element array where the first element is the minimum price and the second is the maximum price.
+ * @param {string[]} props.selectedCategories - List of selected sport category names.
+ * @param {string|null} props.selectedCity - Currently selected city name, or null if none.
+ * @param {number} props.minRating - Currently selected minimum rating.
+ * @param {string[]} props.selectedAmenities - List of selected amenity names.
+ * @param {(newRange: [number, number]) => void} props.onPriceChange - Called with the updated price range.
+ * @param {(category: string) => void} props.onCategoryChange - Called when a category is toggled/selected.
+ * @param {(city: string) => void} props.onCityChange - Called when a city is selected.
+ * @param {(rating: number) => void} props.onRatingChange - Called when a minimum rating is selected.
+ * @param {(amenity: string) => void} props.onAmenityChange - Called when an amenity is toggled/selected.
+ * @param {() => void} props.onClearAll - Called to clear all active filters.
+ * @param {number} [props.activeFilters=0] - Number of active filters; controls the badge and visibility of the "Clear All" action.
+ * @returns {JSX.Element} The rendered filters UI component.
+ */
 export default function SearchFilters({
   priceRange,
   selectedCategories,

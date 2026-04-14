@@ -2,6 +2,13 @@ import React from 'react';
 import { Star, MessageCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 
+/**
+ * Render a reviews summary and list for a turf, showing the average rating, rating distribution bars, and a CTA to leave a review.
+ *
+ * @param {object} props.turf - Turf data; used to derive the displayed average rating (reads `turf.rating` if present).
+ * @param {() => void} props.onLeaveReview - Click handler invoked when the "Leave a Review" / "Be the first to review this turf" button is pressed.
+ * @returns {JSX.Element} The ReviewsSection UI containing the rating summary, distribution bars, CTA, and (when present) the list of reviews.
+ */
 export default function ReviewsSection({ turf, onLeaveReview }) {
   // Sample reviews data - in a real app this would come from the database
   const reviews = [];

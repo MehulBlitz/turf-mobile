@@ -4,6 +4,13 @@ import { supabase } from '../lib/supabase';
 import { cn, formatCurrency } from '../lib/utils';
 import AppAvatar from './common/AppAvatar';
 
+/**
+ * Render the admin dashboard UI with overview, bookings, turfs, and users tabs.
+ *
+ * On mount, loads aggregated counts, recent bookings, turfs list, confirmed revenue, and pending bookings from Supabase and updates internal state; includes a Refresh button and local filtering for bookings.
+ *
+ * @returns {JSX.Element} The Admin Dashboard UI component.
+ */
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ users: 0, turfs: 0, bookings: 0, revenue: 0, pendingBookings: 0 });
   const [loading, setLoading] = useState(true);
