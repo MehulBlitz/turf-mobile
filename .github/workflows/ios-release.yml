@@ -71,14 +71,14 @@ jobs:
         shell: bash
 
       - name: Import provisioning profile for signing
-        if: secrets.IOS_PROVISIONING_PROFILE_BASE64
+        if: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 != '' }}
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles/
           echo "${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
         shell: bash
 
       - name: Import code signing certificate
-        if: secrets.IOS_SIGNING_CERTIFICATE_BASE64
+        if: ${{ secrets.IOS_SIGNING_CERTIFICATE_BASE64 != '' }}
         env:
           CERTIFICATE_PATH: ${{ runner.temp }}/certificate.p12
           KEYCHAIN_PATH: ${{ runner.temp }}/app-signing.keychain-db
@@ -149,7 +149,7 @@ jobs:
         shell: bash
 
       - name: Upload to TestFlight
-        if: github.event.inputs.testflight == 'true' && secrets.APPLE_API_KEY_ID
+        if: ${{ github.event.inputs.testflight == 'true' && secrets.APPLE_API_KEY_ID != '' }}
         run: |
           xcrun altool --upload-app \
             --file build/app-release-${{ github.run_number }}.ipa \
