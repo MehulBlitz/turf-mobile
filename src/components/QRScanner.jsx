@@ -81,17 +81,21 @@ export default function QRScanner({ onClose }) {
 
   const lookupBooking = async (rawData) => {
     const parsed = parseBookingPayload(rawData);
-    let booking = null;
 
     if (parsed.qrToken) {
-      booking = await fetchBookingByQrToken(parsed.qrToken);
+      const booking = await fetchBookingByQrToken(parsed.qrToken);
+      if (!booking) return null;
+      if (parsed.bookingId && booking.id !== parsed.bookingId) {
+        return null;
+      }
+      return booking;
     }
 
-    if (!booking && parsed.bookingId) {
-      booking = await fetchBookingById(parsed.bookingId);
+    if (parsed.bookingId) {
+      return await fetchBookingById(parsed.bookingId);
     }
 
-    return booking;
+    return null;
   };
 
   const getCodeReader = () => {
