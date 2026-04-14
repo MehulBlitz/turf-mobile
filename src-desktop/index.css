@@ -694,9 +694,16 @@
   .desktop-ios-theme .owner-dashboard .modal-backdrop > div {
     max-width: min(1120px, calc(100vw - 240px));
     max-height: calc(100vh - 70px);
+    width: min(1120px, calc(100vw - 240px));
     border-radius: 2.1rem;
     border: 1px solid rgba(224, 232, 237, 0.92);
     box-shadow: 0 40px 60px -36px rgba(15, 23, 42, 0.5);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .desktop-ios-theme .owner-dashboard .modal-backdrop .viewport-scroll {
+    max-height: calc(100vh - 100px);
   }
 
   .desktop-ios-theme .bookings-calendar-page .calendar-content-shell {
