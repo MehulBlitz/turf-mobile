@@ -1031,7 +1031,7 @@ function AppContent() {
                       )}>
                         {booking.booking_status || booking.status}
                       </span>
-                      {booking.status !== 'cancelled' && booking.status !== 'rejected' && new Date(booking.start_time) > new Date() && (
+                      {booking.booking_status !== 'cancelled' && booking.status !== 'cancelled' && booking.status !== 'rejected' && new Date(booking.start_time) > new Date() && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

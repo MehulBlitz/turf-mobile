@@ -563,11 +563,11 @@ export default function OwnerDashboard({ user, onTurfUpdate }) {
                   </div>
                   <span className={cn(
                     "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
-                    booking.status === 'confirmed' ? "bg-emerald-100 text-emerald-600" : 
-                    booking.status === 'pending' ? "bg-amber-100 text-amber-600" :
+                    booking.booking_status === 'booked' ? "bg-emerald-100 text-emerald-600" : 
+                    booking.booking_status === 'time is gone' ? "bg-amber-100 text-amber-600" :
                     "bg-red-100 text-red-600"
                   )}>
-                    {booking.status}
+                    {booking.booking_status || booking.status}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -604,7 +604,7 @@ export default function OwnerDashboard({ user, onTurfUpdate }) {
                       </>
                     )}
 
-                    {booking.status === 'confirmed' && new Date(booking.start_time) > new Date() && (
+                    {booking.booking_status !== 'cancelled' && booking.status === 'confirmed' && new Date(booking.start_time) > new Date() && (
                       <button
                         onClick={() => setSelectedCancelBooking(booking)}
                         className="px-3 py-1.5 bg-red-500 text-white text-[10px] font-bold uppercase rounded-lg shadow-sm hover:bg-red-600"
