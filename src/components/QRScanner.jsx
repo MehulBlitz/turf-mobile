@@ -4,7 +4,6 @@ import { X, CheckCircle2, AlertCircle, QrCode as QrCodeIcon, Camera, Image as Im
 import { capturePhoto, checkCameraPermission, pickPhotoFromGallery, requestCameraPermission } from '../lib/capacitorPlugins';
 import { fetchBookingById, fetchBookingByQrToken, supabase } from '../lib/supabase';
 import { formatCurrency } from '../lib/utils';
-import jsQR from 'jsqr';
 import { Html5Qrcode } from 'html5-qrcode';
 
 export default function QRScanner({ onClose }) {
@@ -76,70 +75,41 @@ export default function QRScanner({ onClose }) {
     return null;
   };
 
-  const scanQRFromPhoto = (photoUrl) => {
-    return new Promise((resolve) => {
-      const img = new window.Image();
-      img.onload = async () => {
-        try {
-          // Create canvas and draw image
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0);
+  const scanQRFromPhoto = async (photoUrl) => {
+    try {
+      const result = await Html5Qrcode.scanFile(photoUrl, true);
+      if (!result) {
+        setError('No QR code found in image. Try again with a clearer photo.');
+        return;
+      }
 
-          // Get image data
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const booking = await lookupBooking(result);
+      if (booking) {
+        const currentUser = await supabase.auth.getUser();
+        const ownsTicket = currentUser?.data?.user?.id === booking.user_id;
 
-          // Decode QR code using jsQR
-          const code = jsQR(imageData.data, imageData.width, imageData.height);
-
-          if (code) {
-            const rawData = code.data;
-            const booking = await lookupBooking(rawData);
-
-            if (booking) {
-              const currentUser = await supabase.auth.getUser();
-              const ownsTicket = currentUser?.data?.user?.id === booking.user_id;
-
-              setScannedData({
-                id: booking.id,
-                turf: booking.turfs?.name,
-                date: booking.start_time,
-                time: `${new Date(booking.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(booking.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-                amount: booking.total_price,
-                status: booking.status,
-                ownsTicket,
-                raw: rawData,
-              });
-            } else if (rawData) {
-              setScannedData({
-                raw: rawData,
-                id: isUuid(rawData) ? rawData : rawData.substring(0, 8),
-              });
-            } else {
-              setError('No QR code found in image. Try again with a clearer photo.');
-            }
-          } else {
-            setError('No QR code found in image. Try again with a clearer photo.');
-          }
-        } catch (err) {
-          console.error('QR decode error:', err);
-          setError('Failed to scan QR code. Try again.');
-        } finally {
-          setIsLoading(false);
-          resolve();
-        }
-      };
-
-      img.onerror = () => {
-        setError('Failed to load photo. Try again.');
-        setIsLoading(false);
-        resolve();
-      };
-
-      img.src = photoUrl;
-    });
+        setScannedData({
+          id: booking.id,
+          turf: booking.turfs?.name,
+          date: booking.start_time,
+          time: `${new Date(booking.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(booking.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+          amount: booking.total_price,
+          status: booking.status,
+          ownsTicket,
+          raw: result,
+        });
+      } else {
+        setScannedData({
+          raw: result,
+          id: isUuid(result) ? result : result.substring(0, 8),
+        });
+      }
+    } catch (err) {
+      console.error('QR scan from photo error:', err);
+      setError('Failed to scan QR code from photo. Try a clearer image or a different angle.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCapturePhoto = async () => {
@@ -147,9 +117,7 @@ export default function QRScanner({ onClose }) {
       setIsLoading(true);
       setError(null);
 
-      // Use Capacitor's Camera plugin to capture photo
       const photo = await capturePhoto();
-
       if (!photo) {
         setIsLoading(false);
         return;
@@ -168,9 +136,7 @@ export default function QRScanner({ onClose }) {
       setIsLoading(true);
       setError(null);
 
-      // Use Capacitor's Camera plugin to pick from gallery
       const photo = await pickPhotoFromGallery();
-
       if (!photo) {
         setIsLoading(false);
         return;
