@@ -1,0 +1,830 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@400;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Manrope", "Avenir Next", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Sora", "Manrope", "Avenir Next", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-brand: #10b981; /* Emerald 500 */
+  --color-brand-dark: #059669; /* Emerald 600 */
+}
+
+@layer base {
+  :root {
+    --bg-primary: #f4f4f5; /* zinc-100 */
+    --bg-secondary: #ffffff;
+    --text-primary: #18181b; /* zinc-900 */
+    --text-secondary: #71717a; /* zinc-50 */
+    --border-primary: #f4f4f5; /* zinc-100 */
+
+    --rhythm-space-1: 0.55rem;
+    --rhythm-space-2: 0.82rem;
+    --rhythm-space-3: 1.08rem;
+    --rhythm-space-4: 1.32rem;
+    --micro-fast: 160ms;
+    --micro-base: 260ms;
+
+    --ios-radius-card: 1.75rem;
+    --ios-radius-control: 1.2rem;
+    --ios-radius-modal: 2rem;
+    --ios-spring: cubic-bezier(0.22, 1, 0.36, 1);
+    --ios-shadow-soft: 0 18px 34px -22px rgba(15, 23, 42, 0.25);
+    --ios-shadow-float: 0 24px 44px -20px rgba(15, 23, 42, 0.28);
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    background:
+      radial-gradient(120% 60% at 10% 0%, rgba(16, 185, 129, 0.1), transparent 55%),
+      radial-gradient(120% 55% at 90% 0%, rgba(16, 185, 129, 0.08), transparent 50%),
+      var(--bg-primary);
+    color: var(--text-primary);
+  }
+}
+
+@layer utilities {
+  .ios-theme {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .ios-theme .mobile-container {
+    max-width: 460px;
+    background:
+      radial-gradient(120% 60% at 0% -10%, rgba(16, 185, 129, 0.08), transparent 56%),
+      radial-gradient(120% 60% at 100% -10%, rgba(16, 185, 129, 0.05), transparent 52%),
+      var(--bg-primary);
+    border-radius: 2.65rem;
+    overflow-x: hidden;
+    padding-top: max(0px, env(safe-area-inset-top));
+    padding-bottom: calc(108px + env(safe-area-inset-bottom));
+    box-shadow:
+      0 30px 55px -30px rgba(15, 23, 42, 0.34),
+      inset 0 1px 0 rgba(255, 255, 255, 0.78);
+  }
+
+  @media (max-width: 768px) {
+    .ios-theme .mobile-container {
+      max-width: 100%;
+      border-radius: 0;
+      box-shadow: none;
+    }
+  }
+
+  .ios-theme .modal-backdrop {
+    background: rgba(12, 18, 28, 0.35);
+    backdrop-filter: blur(8px);
+  }
+
+  .ios-theme .safe-modal,
+  .ios-theme .safe-dropdown {
+    border-radius: var(--ios-radius-modal);
+    background: rgba(255, 255, 255, 0.84);
+    border: 1px solid rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(26px) saturate(165%);
+    box-shadow: var(--ios-shadow-float);
+  }
+
+  .ios-theme button {
+    transition:
+      transform var(--micro-base) var(--ios-spring),
+      box-shadow var(--micro-base) var(--ios-spring),
+      background-color var(--micro-base) var(--ios-spring),
+      color var(--micro-base) var(--ios-spring),
+      border-color var(--micro-base) var(--ios-spring),
+      filter var(--micro-base) var(--ios-spring);
+  }
+
+  .ios-theme button:active {
+    transform: scale(0.97);
+  }
+
+  .ios-theme input,
+  .ios-theme textarea,
+  .ios-theme select {
+    border-radius: var(--ios-radius-control);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.78),
+      0 10px 18px -18px rgba(15, 23, 42, 0.28);
+  }
+
+  .ios-theme [class*="bg-white"][class*="rounded"] {
+    box-shadow: var(--ios-shadow-soft);
+    border-color: rgba(228, 228, 231, 0.78);
+  }
+
+  .ios-theme .ios-tabbar-wrap {
+    bottom: calc(0.65rem + env(safe-area-inset-bottom));
+    width: min(calc(100% - 20px), 420px);
+  }
+
+  .ios-theme .ios-tabbar {
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.86);
+    backdrop-filter: blur(26px) saturate(170%);
+    border-radius: 2rem;
+    box-shadow: var(--ios-shadow-float);
+    padding: 0.45rem;
+  }
+
+  .ios-theme .ios-tabbar-item {
+    min-height: 3.1rem;
+    border-radius: 1.35rem;
+    color: #71717a;
+  }
+
+  .ios-theme .ios-tabbar-item.is-active {
+    color: #047857;
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.14));
+    box-shadow:
+      inset 0 0 0 1px rgba(16, 185, 129, 0.24),
+      0 10px 20px -16px rgba(16, 185, 129, 0.55);
+  }
+
+  .ios-theme .viewport-scroll {
+    padding-bottom: calc(120px + env(safe-area-inset-bottom));
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 10px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #10b981;
+    border-radius: 10px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #059669;
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #10b981 #f3f4f6;
+  }
+
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/20;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500;
+  }
+
+  /* Mobile Viewport Utilities */
+  .safe-modal {
+    @apply fixed z-50 bg-white rounded-2xl shadow-2xl;
+    max-height: calc(100vh - 32px);
+    max-width: min(calc(100vw - 32px), 600px);
+  }
+
+  .modal-backdrop {
+    @apply fixed inset-0 bg-black/50 z-40;
+  }
+
+  .safe-dropdown {
+    @apply fixed z-50 bg-white rounded-2xl shadow-xl border border-zinc-200;
+    max-height: 60vh;
+    min-width: 200px;
+  }
+
+  .viewport-center {
+    @apply fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2;
+  }
+
+  .viewport-bottom {
+    @apply fixed bottom-0 left-0 right-0;
+  }
+
+  /* Scrollable Container - fits viewport with safe margins */
+  .viewport-scroll {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+  }
+
+  /* Safe padding for all modals to prevent screen cutoff */
+  @media (max-height: 600px) {
+    .safe-modal {
+      max-height: calc(100vh - 16px);
+    }
+    .viewport-scroll {
+      max-height: calc(100vh - 80px);
+    }
+  }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes antigravity-drift {
+  0% { transform: translate3d(-1%, 1%, 0) scale(1); }
+  50% { transform: translate3d(1.25%, -1%, 0) scale(1.03); }
+  100% { transform: translate3d(-1%, 1%, 0) scale(1); }
+}
+
+@keyframes antigravity-orbit {
+  0% { transform: rotate(0deg) translate3d(0, 0, 0); }
+  50% { transform: rotate(1.4deg) translate3d(0.6%, -0.9%, 0); }
+  100% { transform: rotate(-1.4deg) translate3d(-0.6%, 0.9%, 0); }
+}
+
+@keyframes nav-breathe {
+  0%, 100% { box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.24), 0 10px 20px -16px rgba(16, 185, 129, 0.5); }
+  50% { box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.34), 0 12px 24px -14px rgba(16, 185, 129, 0.62); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.card-shadow {
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
+}
+
+.card-shadow-hover:hover {
+  box-shadow: 0 30px 60px -12px rgba(16, 185, 129, 0.15);
+}
+
+.mobile-container {
+  width: 100%;
+  max-width: 450px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  position: relative;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+@media (min-width: 760px) {
+  .desktop-ios-theme {
+    min-height: 100vh;
+    padding: 18px;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    background:
+      radial-gradient(110% 92% at 10% -18%, rgba(255, 159, 252, 0.15), transparent 64%),
+      radial-gradient(82% 80% at 100% 6%, rgba(70, 195, 255, 0.13), transparent 62%),
+      linear-gradient(160deg, #eaf0f6 0%, #eef4f7 56%, #dfe7f0 100%);
+  }
+
+  .desktop-ios-theme::before,
+  .desktop-ios-theme::after {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .desktop-ios-theme::before {
+    background:
+      radial-gradient(circle at 12% 28%, rgba(255, 159, 252, 0.34) 0, rgba(255, 159, 252, 0.06) 20%, transparent 42%),
+      radial-gradient(circle at 30% 70%, rgba(120, 190, 255, 0.28) 0, rgba(120, 190, 255, 0.05) 18%, transparent 40%),
+      radial-gradient(circle at 74% 22%, rgba(255, 218, 141, 0.24) 0, rgba(255, 218, 141, 0.04) 18%, transparent 42%),
+      radial-gradient(circle at 88% 78%, rgba(79, 243, 205, 0.2) 0, rgba(79, 243, 205, 0.03) 18%, transparent 40%);
+    filter: blur(2px);
+    opacity: 0.62;
+    animation: antigravity-drift 24s ease-in-out infinite;
+  }
+
+  .desktop-ios-theme::after {
+    background:
+      radial-gradient(circle at 16% 44%, rgba(255, 255, 255, 0.34) 0, rgba(255, 255, 255, 0.04) 14%, transparent 34%),
+      radial-gradient(circle at 48% 16%, rgba(255, 255, 255, 0.24) 0, rgba(255, 255, 255, 0.04) 12%, transparent 32%),
+      radial-gradient(circle at 68% 62%, rgba(255, 255, 255, 0.22) 0, rgba(255, 255, 255, 0.03) 11%, transparent 30%),
+      radial-gradient(circle at 90% 34%, rgba(255, 255, 255, 0.25) 0, rgba(255, 255, 255, 0.03) 12%, transparent 31%);
+    opacity: 0.42;
+    animation: antigravity-orbit 30s linear infinite;
+  }
+
+  .desktop-ios-theme .desktop-app-shell.mobile-container {
+    width: min(1500px, calc(100vw - 34px));
+    max-width: min(1500px, calc(100vw - 34px));
+    min-height: calc(100vh - 36px);
+    margin: 0 auto;
+    border-radius: 2.55rem;
+    padding-left: 116px;
+    padding-right: 28px;
+    padding-top: 18px;
+    padding-bottom: 28px;
+    position: relative;
+    z-index: 2;
+    background:
+      radial-gradient(120% 90% at 0% -12%, rgba(14, 165, 140, 0.1), transparent 58%),
+      radial-gradient(120% 90% at 100% 0%, rgba(245, 158, 11, 0.09), transparent 55%),
+      rgba(249, 251, 252, 0.86);
+    border: 1px solid rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(10px);
+    box-shadow:
+      0 45px 80px -45px rgba(15, 23, 42, 0.42),
+      0 10px 18px -12px rgba(15, 23, 42, 0.24),
+      inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  }
+
+  .desktop-ios-theme .desktop-page-shell {
+    padding-bottom: var(--rhythm-space-3);
+  }
+
+  .desktop-ios-theme .desktop-page-header {
+    top: 10px;
+    margin: 0 0 var(--rhythm-space-2);
+    border: 1px solid rgba(224, 232, 237, 0.9);
+    border-radius: 1.55rem;
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 18px 34px -30px rgba(15, 23, 42, 0.55);
+  }
+
+  .desktop-ios-theme .desktop-tabbar-wrap.ios-tabbar-wrap {
+    left: 16px;
+    top: 16px;
+    bottom: auto;
+    width: 84px;
+    transform: none;
+    translate: 0 0;
+    z-index: 60;
+  }
+
+  .desktop-ios-theme .desktop-tabbar.ios-tabbar {
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0.12rem;
+    padding: 0.42rem;
+    border-radius: 2.05rem;
+  }
+
+  .desktop-ios-theme .desktop-tabbar-item.ios-tabbar-item {
+    flex: none;
+    width: 100%;
+    min-height: 3rem;
+    border-radius: 1.1rem;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.12rem;
+    transform: translateY(0);
+    transition:
+      transform var(--micro-fast) var(--ios-spring),
+      box-shadow var(--micro-base) var(--ios-spring),
+      background-color var(--micro-base) var(--ios-spring),
+      color var(--micro-base) var(--ios-spring);
+  }
+
+  .desktop-ios-theme .desktop-tabbar-item.ios-tabbar-item svg {
+    width: 18px;
+    height: 18px;
+    transition: transform var(--micro-fast) var(--ios-spring);
+  }
+
+  .desktop-ios-theme .desktop-tabbar-item.ios-tabbar-item:hover {
+    transform: translateY(-1px);
+    background: rgba(16, 185, 129, 0.08);
+  }
+
+  .desktop-ios-theme .desktop-tabbar-item.ios-tabbar-item:hover svg {
+    transform: scale(1.06);
+  }
+
+  .desktop-ios-theme .desktop-tabbar-item.ios-tabbar-item:active {
+    transform: translateY(0) scale(0.97);
+  }
+
+  .desktop-ios-theme .desktop-tabbar-item.ios-tabbar-item.is-active {
+    animation: nav-breathe 5s ease-in-out infinite;
+  }
+
+  .desktop-ios-theme .desktop-tabbar-item.ios-tabbar-item span {
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.9;
+  }
+
+  .desktop-ios-theme .desktop-notifications-popover {
+    top: 96px;
+    right: 36px;
+    width: min(360px, calc(100vw - 240px));
+  }
+
+  .desktop-ios-theme .desktop-home-layout {
+    display: grid;
+    grid-template-columns: minmax(320px, 370px) minmax(0, 1fr);
+    gap: var(--rhythm-space-2);
+    align-items: start;
+  }
+
+  .desktop-ios-theme .desktop-home-controls {
+    position: sticky;
+    top: 104px;
+    align-self: start;
+  }
+
+  .desktop-ios-theme .desktop-home-controls > div,
+  .desktop-ios-theme .desktop-home-feed > div {
+    border-radius: 1.75rem;
+    border: 1px solid rgba(225, 234, 238, 0.9);
+    background: rgba(255, 255, 255, 0.77);
+    box-shadow: 0 20px 40px -34px rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(10px);
+    transition:
+      transform var(--micro-base) var(--ios-spring),
+      box-shadow var(--micro-base) var(--ios-spring),
+      border-color var(--micro-base) var(--ios-spring);
+  }
+
+  .desktop-ios-theme .desktop-home-controls > div:hover,
+  .desktop-ios-theme .desktop-home-feed > div:hover {
+    transform: translateY(-1px);
+    border-color: rgba(179, 216, 230, 0.92);
+    box-shadow: 0 24px 42px -34px rgba(15, 23, 42, 0.58);
+  }
+
+  .desktop-ios-theme .desktop-home-controls > div {
+    margin-bottom: 0;
+    padding: var(--rhythm-space-3);
+  }
+
+  .desktop-ios-theme .desktop-home-controls .desktop-category-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+    overflow: visible;
+    padding-bottom: 0;
+  }
+
+  .desktop-ios-theme .desktop-home-controls .desktop-category-grid > button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .desktop-ios-theme .desktop-home-feed {
+    min-width: 0;
+  }
+
+  .desktop-ios-theme .desktop-home-feed > div {
+    padding: var(--rhythm-space-3);
+  }
+
+  .desktop-ios-theme .desktop-home-controls .desktop-date-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.68rem;
+    overflow: visible;
+    padding-bottom: 0;
+  }
+
+  .desktop-ios-theme .desktop-home-controls .desktop-date-grid > button {
+    min-width: 0;
+    width: 100%;
+    height: 84px;
+  }
+
+  .desktop-ios-theme .desktop-featured-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: var(--rhythm-space-2);
+    align-items: stretch;
+  }
+
+  .desktop-ios-theme .desktop-featured-grid > * {
+    margin: 0;
+  }
+
+  .desktop-ios-theme .desktop-featured-card .relative.h-56 {
+    height: 198px;
+  }
+
+  .desktop-ios-theme .desktop-featured-card,
+  .desktop-ios-theme .desktop-booking-card,
+  .desktop-ios-theme .owner-dashboard .owner-turf-card,
+  .desktop-ios-theme .owner-dashboard .owner-booking-card,
+  .desktop-ios-theme .desktop-feedback-grid > * {
+    transition:
+      transform var(--micro-base) var(--ios-spring),
+      box-shadow var(--micro-base) var(--ios-spring),
+      border-color var(--micro-base) var(--ios-spring);
+  }
+
+  .desktop-ios-theme .desktop-featured-card:hover,
+  .desktop-ios-theme .desktop-booking-card:hover,
+  .desktop-ios-theme .owner-dashboard .owner-turf-card:hover,
+  .desktop-ios-theme .owner-dashboard .owner-booking-card:hover,
+  .desktop-ios-theme .desktop-feedback-grid > *:hover {
+    transform: translateY(-4px);
+    border-color: rgba(183, 220, 226, 0.95);
+    box-shadow: 0 28px 44px -34px rgba(15, 23, 42, 0.58);
+  }
+
+  .desktop-ios-theme .desktop-bookings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--rhythm-space-2);
+    align-items: stretch;
+  }
+
+  .desktop-ios-theme .desktop-bookings-grid > * {
+    margin: 0;
+  }
+
+  .desktop-ios-theme .desktop-booking-card {
+    height: 100%;
+    border-radius: 2rem;
+    background: linear-gradient(165deg, rgba(255, 255, 255, 0.98), rgba(246, 249, 250, 0.92));
+  }
+
+  .desktop-ios-theme .desktop-feedback-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: var(--rhythm-space-2);
+    align-items: stretch;
+  }
+
+  .desktop-ios-theme .desktop-feedback-grid > * {
+    margin: 0;
+    height: 100%;
+  }
+
+  .desktop-ios-theme .desktop-profile-layout {
+    max-width: 1040px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    grid-template-areas:
+      "avatar actions"
+      "name actions"
+      "role actions";
+    text-align: left;
+    row-gap: 0.35rem;
+    column-gap: 1.2rem;
+    align-items: start;
+  }
+
+  .desktop-ios-theme .desktop-profile-layout > :nth-child(1) {
+    grid-area: avatar;
+    justify-self: center;
+    margin-top: 0.85rem;
+  }
+
+  .desktop-ios-theme .desktop-profile-layout > :nth-child(2) {
+    grid-area: name;
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  .desktop-ios-theme .desktop-profile-layout > :nth-child(3) {
+    grid-area: role;
+    text-align: center;
+    margin-bottom: 0;
+  }
+
+  .desktop-ios-theme .desktop-profile-layout .desktop-profile-actions {
+    grid-area: actions;
+    width: 100%;
+  }
+
+  .desktop-ios-theme .desktop-detail-view {
+    display: grid;
+    grid-template-columns: minmax(360px, 0.86fr) minmax(0, 1.14fr);
+    min-height: calc(100vh - 88px);
+    border-radius: 2.2rem;
+    overflow: hidden;
+    border: 1px solid rgba(225, 234, 238, 0.95);
+    box-shadow: 0 26px 50px -32px rgba(15, 23, 42, 0.5);
+  }
+
+  .desktop-ios-theme .desktop-detail-hero {
+    height: auto;
+    min-height: 100%;
+  }
+
+  .desktop-ios-theme .desktop-detail-content {
+    margin-top: 0;
+    border-radius: 0;
+    padding: 2rem 2.2rem 1.5rem;
+    max-height: calc(100vh - 88px);
+  }
+
+  .desktop-ios-theme .booking-sheet {
+    left: 50%;
+    right: auto;
+    bottom: 18px;
+    translate: -50% 0;
+    width: min(980px, calc(100vw - 56px));
+    max-height: calc(100vh - 58px);
+    border-radius: 2.2rem;
+    border: 1px solid rgba(224, 232, 237, 0.9);
+    box-shadow: 0 40px 55px -35px rgba(15, 23, 42, 0.55);
+  }
+
+  .desktop-ios-theme .booking-sheet > .w-16.h-1\.5 {
+    display: none;
+  }
+
+  .desktop-ios-theme .desktop-filters-root .desktop-filters-panel {
+    width: 100%;
+    left: 0;
+    right: 0;
+  }
+
+  .desktop-ios-theme .owner-dashboard {
+    padding-top: 0.35rem;
+    padding-left: 0.2rem;
+    padding-right: 0.2rem;
+    background: transparent;
+  }
+
+  .desktop-ios-theme .owner-dashboard .owner-toolbar {
+    position: sticky;
+    top: 104px;
+    z-index: 15;
+    border-radius: 1.6rem;
+    border: 1px solid rgba(224, 232, 237, 0.92);
+    background: rgba(255, 255, 255, 0.74);
+    backdrop-filter: blur(12px);
+    padding: 0.8rem 0.9rem;
+    margin-bottom: var(--rhythm-space-3);
+  }
+
+  .desktop-ios-theme .owner-dashboard .owner-turfs-grid,
+  .desktop-ios-theme .owner-dashboard .owner-bookings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--rhythm-space-2);
+  }
+
+  .desktop-ios-theme .owner-dashboard .owner-turfs-grid > *,
+  .desktop-ios-theme .owner-dashboard .owner-bookings-grid > * {
+    margin: 0;
+  }
+
+  .desktop-ios-theme .owner-dashboard .owner-turf-card,
+  .desktop-ios-theme .owner-dashboard .owner-booking-card {
+    height: 100%;
+    border-radius: 2rem;
+  }
+
+  .desktop-ios-theme .owner-dashboard .modal-backdrop {
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .desktop-ios-theme .owner-dashboard .modal-backdrop > div {
+    max-width: min(1120px, calc(100vw - 240px));
+    max-height: calc(100vh - 70px);
+    border-radius: 2.1rem;
+    border: 1px solid rgba(224, 232, 237, 0.92);
+    box-shadow: 0 40px 60px -36px rgba(15, 23, 42, 0.5);
+  }
+
+  .desktop-ios-theme .bookings-calendar-page .calendar-content-shell {
+    max-width: none;
+  }
+
+  .desktop-ios-theme .bookings-calendar-page .bookings-calendar-layout {
+    display: grid;
+    grid-template-columns: minmax(390px, 0.84fr) minmax(0, 1.16fr);
+    gap: var(--rhythm-space-3);
+    align-items: start;
+  }
+
+  .desktop-ios-theme .bookings-calendar-page .bookings-calendar-right {
+    border-radius: 1.8rem;
+    border: 1px solid rgba(224, 232, 237, 0.9);
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow: 0 20px 38px -32px rgba(15, 23, 42, 0.6);
+    padding: 1rem;
+    min-height: 380px;
+  }
+
+  .desktop-ios-theme .bookings-calendar-page .bookings-calendar-stats {
+    margin-top: 0.95rem;
+  }
+
+  .desktop-ios-theme .bookings-calendar-page .bookings-calendar-stats > div {
+    border-radius: 1.5rem;
+  }
+
+  .desktop-ios-theme .desktop-feedback-page .desktop-feedback-content {
+    max-width: 1120px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .desktop-ios-theme .desktop-feedback-page .desktop-feedback-comment-list,
+  .desktop-ios-theme .desktop-feedback-page .desktop-feedback-rating-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(295px, 1fr));
+    gap: var(--rhythm-space-2);
+  }
+
+  .desktop-ios-theme .desktop-feedback-page .desktop-feedback-comment-list > *,
+  .desktop-ios-theme .desktop-feedback-page .desktop-feedback-rating-list > * {
+    margin: 0;
+  }
+
+  .desktop-ios-theme .admin-dashboard {
+    background: transparent;
+  }
+
+  .desktop-ios-theme .desktop-auth-screen {
+    min-height: 100vh;
+    background:
+      radial-gradient(70% 50% at 8% 8%, rgba(14, 165, 140, 0.2), transparent 62%),
+      radial-gradient(70% 50% at 95% 5%, rgba(245, 158, 11, 0.17), transparent 60%),
+      linear-gradient(170deg, #e9f3f3 0%, #edf2f7 100%);
+  }
+
+  .desktop-ios-theme .desktop-auth-screen .desktop-auth-card {
+    max-width: 470px;
+    border-radius: 2.2rem;
+    border: 1px solid rgba(224, 232, 237, 0.9);
+    background: rgba(255, 255, 255, 0.82);
+    box-shadow: 0 36px 58px -38px rgba(15, 23, 42, 0.54);
+    backdrop-filter: blur(10px);
+    padding: 1.8rem;
+  }
+
+  .desktop-ios-theme .viewport-scroll {
+    max-height: calc(100vh - 84px);
+    padding-bottom: 56px;
+  }
+
+  .desktop-ios-theme .modal-backdrop {
+    background: rgba(12, 18, 28, 0.4);
+    backdrop-filter: blur(14px);
+  }
+
+  .desktop-ios-theme .safe-modal {
+    max-width: min(920px, calc(100vw - 260px));
+    max-height: calc(100vh - 60px);
+  }
+
+  .desktop-ios-theme .safe-dropdown {
+    min-width: 280px;
+  }
+}
+
+@media (min-width: 760px) and (max-width: 1180px) {
+  .desktop-ios-theme .desktop-home-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .desktop-ios-theme .desktop-home-controls {
+    order: 2;
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--rhythm-space-2);
+  }
+
+  .desktop-ios-theme .desktop-home-controls > div:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .desktop-ios-theme .desktop-home-controls .desktop-date-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .desktop-ios-theme .desktop-home-feed {
+    order: 1;
+    grid-column: 1 / -1;
+  }
+
+  .desktop-ios-theme .desktop-featured-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

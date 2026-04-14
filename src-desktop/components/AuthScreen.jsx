@@ -102,7 +102,7 @@ export default function AuthScreen({ onAuthSuccess }) {
   };
 
   return (
-    <div className="flex-1 flex flex-col p-8 justify-center bg-white">
+    <div className="desktop-auth-screen flex-1 flex flex-col p-8 justify-center bg-white">
       <AnimatePresence>
         {showSuccess && (
           <motion.div
@@ -140,7 +140,7 @@ export default function AuthScreen({ onAuthSuccess }) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-sm mx-auto w-full"
+        className="desktop-auth-card max-w-sm mx-auto w-full"
       >
         <div className="mb-10 text-center">
           <div className="w-16 h-16 bg-emerald-500 rounded-3xl flex items-center justify-center text-white mx-auto mb-6 shadow-xl shadow-emerald-500/20">

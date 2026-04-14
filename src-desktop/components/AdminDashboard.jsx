@@ -53,7 +53,7 @@ export default function AdminDashboard() {
   if (loading) return <div className="flex-1 flex items-center justify-center"><Loader2 className="animate-spin text-emerald-500" /></div>;
 
   return (
-    <div className="flex-1 p-6 pb-24 bg-zinc-50">
+    <div className="admin-dashboard flex-1 p-6 pb-24 bg-zinc-50">
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-2xl font-bold text-zinc-900">Admin Dashboard</h2>
         <button
@@ -103,7 +103,7 @@ export default function AdminDashboard() {
             </div>
 
             <div className="bg-white p-4 rounded-3xl border border-zinc-100 shadow-sm">
-              <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 mb-2 relative">
+              <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center text-cyan-600 mb-2 relative">
                 <Calendar size={20} />
                 {stats.pendingBookings > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-[10px] font-bold flex items-center justify-center">

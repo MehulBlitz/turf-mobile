@@ -203,17 +203,17 @@ export default function BookingsCalendar({ userId }) {
           )}
 
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border border-emerald-200">
+            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border border-emerald-200 min-w-0">
               <p className="text-sm text-emerald-700 font-semibold mb-2">Total Bookings</p>
-              <p className="text-3xl font-black text-emerald-600">{bookings.length}</p>
+              <p className="text-[clamp(1.75rem,4vw,2.25rem)] leading-tight break-all font-black text-emerald-600">{bookings.length}</p>
             </div>
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200 min-w-0">
               <p className="text-sm text-blue-700 font-semibold mb-2">This Month</p>
-              <p className="text-3xl font-black text-blue-600">{bookingsForDisplay.length}</p>
+              <p className="text-[clamp(1.75rem,4vw,2.25rem)] leading-tight break-all font-black text-blue-600">{bookingsForDisplay.length}</p>
             </div>
-            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 border border-orange-200">
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 border border-orange-200 min-w-0">
               <p className="text-sm text-orange-700 font-semibold mb-2">Total Spent</p>
-              <p className="text-3xl font-black text-orange-600">
+              <p className="text-[clamp(1.75rem,4vw,2.25rem)] leading-tight break-all font-black text-orange-600">
                 ₹{Math.round(bookings.reduce((sum, b) => sum + (b.price || 0), 0))}
               </p>
             </div>

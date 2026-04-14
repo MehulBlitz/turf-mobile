@@ -49,6 +49,8 @@ import CancellationModal from './components/CancellationModal';
 import QRScanner from './components/QRScanner';
 import SearchFilters from './components/SearchFilters';
 import TurfFeedbackPage from './components/TurfFeedbackPage';
+import DashboardEmptyState from './components/DashboardEmptyState';
+import VisualHeroFrame from './components/visuals/VisualHeroFrame';
 import AppAvatar from './components/common/AppAvatar';
 import { getCurrentLocation, checkNetworkStatus, onNetworkStatusChange, showBookingConfirmation, showSuccessToast, showErrorToast, addBookingToCalendar } from './lib/capacitorPlugins';
 import { ensureFirebaseProfile, getFirebaseProfile, saveFirebaseProfile, uploadProfilePhoto, isFirebaseConfigured } from './lib/firebase';
@@ -281,6 +283,16 @@ function AppContent() {
       return 0;
     });
 
+  const hasActiveTurfFilters =
+    searchQuery.trim().length > 0 ||
+    selectedCategory !== 'All' ||
+    filterCategories.length > 0 ||
+    selectedAmenities.length > 0 ||
+    minRating > 0 ||
+    priceRange[0] !== 0 ||
+    priceRange[1] !== 5000 ||
+    selectedCity !== 'Nearby';
+
   const visibleSlots = selectedTurf ? getVisibleSlots(selectedTurf, selectedDate) : [];
   const hiddenSlotsForDate = selectedTurf ? (selectedTurf.blocked_slots || []).filter((block) => block.date === selectedDate) : [];
 
@@ -511,9 +523,9 @@ function AppContent() {
       const width = window.innerWidth;
       const height = window.innerHeight;
       const isTouch = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1;
-      const isDesktop = width >= 900 && !isTouch;
+      const isDesktop = width >= 760 && !isTouch;
       setIsDesktopViewport(isDesktop);
-      setShowRotateWarning(!isDesktop && isTouch && width > height && width < 900);
+      setShowRotateWarning(!isDesktop && isTouch && width > height && width < 760);
     };
 
     updateViewportMode();
@@ -1002,8 +1014,8 @@ function AppContent() {
   const renderContent = () => {
     if (isOwner && activeTab === 'dashboard') {
       return (
-        <div className="flex-1 flex flex-col pb-24">
-          <header className="p-6 flex items-center gap-4 bg-white/50 backdrop-blur-md sticky top-0 z-20">
+        <div className="flex-1 flex flex-col pb-24 desktop-page-shell desktop-owner-shell">
+          <header className="p-6 flex items-center gap-4 bg-white/50 backdrop-blur-md sticky top-0 z-20 desktop-page-header">
             <button 
               onClick={() => setActiveTab('home')}
               className="w-10 h-10 rounded-xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 shadow-md active:scale-90 transition-all z-30"
@@ -1019,8 +1031,8 @@ function AppContent() {
 
     if (isAdmin && activeTab === 'dashboard') {
       return (
-        <div className="flex-1 flex flex-col pb-24">
-          <header className="p-6 flex items-center gap-4 bg-white/50 backdrop-blur-md sticky top-0 z-20">
+        <div className="flex-1 flex flex-col pb-24 desktop-page-shell desktop-admin-shell">
+          <header className="p-6 flex items-center gap-4 bg-white/50 backdrop-blur-md sticky top-0 z-20 desktop-page-header">
             <button 
               onClick={() => setActiveTab('home')}
               className="w-10 h-10 rounded-xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 shadow-md active:scale-90 transition-all z-30"
@@ -1036,8 +1048,8 @@ function AppContent() {
 
     if (activeTab === 'bookings') {
       return (
-        <div className="flex-1 flex flex-col pb-24">
-          <header className="p-6 flex items-center gap-4 bg-white/50 backdrop-blur-md sticky top-0 z-20">
+        <div className="flex-1 flex flex-col pb-24 desktop-page-shell desktop-bookings-shell">
+          <header className="p-6 flex items-center gap-4 bg-white/50 backdrop-blur-md sticky top-0 z-20 desktop-page-header">
             <button 
               onClick={() => setActiveTab('home')}
               className="w-10 h-10 rounded-xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 shadow-md active:scale-90 transition-all z-30"
@@ -1046,14 +1058,18 @@ function AppContent() {
             </button>
             <h2 className="text-xl font-display font-bold text-zinc-900">My Bookings</h2>
           </header>
-          <div className="p-6 space-y-4">
+          <div className="desktop-page-body desktop-bookings-body p-6 space-y-4">
             {bookings.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-zinc-400">
-              <Calendar size={48} className="mb-4 opacity-20" />
-              <p className="font-medium">No bookings yet</p>
-            </div>
+              <DashboardEmptyState
+                icon={CalendarDays}
+                title="No bookings yet"
+                message="Book a turf to see upcoming slots, ticket details, and live status updates here."
+                actionLabel="Explore Turfs"
+                onAction={() => setActiveTab('home')}
+                className="mx-auto max-w-xl"
+              />
           ) : (
-              <div className="space-y-4">
+              <div className="desktop-bookings-grid">
                 {bookings.map((booking) => (
                   <div 
                     key={booking.id} 
@@ -1066,7 +1082,7 @@ function AppContent() {
                       },
                       date: booking.start_time
                     })}
-                    className="bg-white p-4 rounded-3xl border border-zinc-100 shadow-sm active:scale-[0.98] transition-all cursor-pointer"
+                    className="desktop-booking-card bg-white p-4 rounded-3xl border border-zinc-100 shadow-sm active:scale-[0.98] transition-all cursor-pointer"
                   >
                   <div className="flex gap-4 mb-4">
                     <div className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 bg-zinc-100">
@@ -1129,8 +1145,8 @@ function AppContent() {
     if (activeTab === 'feedback') {
       if (feedbackTurf) {
         return (
-          <div className="flex-1 flex flex-col pb-24">
-            <header className="p-6 flex items-center gap-4 bg-white/50 backdrop-blur-md sticky top-0 z-20">
+          <div className="flex-1 flex flex-col pb-24 desktop-page-shell desktop-feedback-shell">
+            <header className="p-6 flex items-center gap-4 bg-white/50 backdrop-blur-md sticky top-0 z-20 desktop-page-header">
               <button 
                 onClick={() => setFeedbackTurf(null)}
                 className="w-10 h-10 rounded-xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 shadow-md active:scale-90 transition-all z-30"
@@ -1155,8 +1171,8 @@ function AppContent() {
         );
       }
       return (
-        <div className="flex-1 flex flex-col pb-24">
-          <header className="p-6 flex items-center gap-4 bg-white/50 backdrop-blur-md sticky top-0 z-20">
+        <div className="flex-1 flex flex-col pb-24 desktop-page-shell desktop-feedback-shell">
+          <header className="p-6 flex items-center gap-4 bg-white/50 backdrop-blur-md sticky top-0 z-20 desktop-page-header">
             <button 
               onClick={() => setActiveTab('home')}
               className="w-10 h-10 rounded-xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 shadow-md active:scale-90 transition-all z-30"
@@ -1165,32 +1181,38 @@ function AppContent() {
             </button>
             <h2 className="text-xl font-display font-bold text-zinc-900">Turf Feedback</h2>
           </header>
-          <div className="p-6 space-y-4">
+          <div className="desktop-page-body desktop-feedback-body p-6 space-y-4">
             {turfs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-zinc-400">
-                <MessageCircle size={48} className="mb-4 opacity-20" />
-                <p className="font-medium">No turfs available for feedback yet.</p>
-              </div>
+              <DashboardEmptyState
+                icon={MessageCircle}
+                title="No turfs available for feedback"
+                message="As soon as turfs are available, you can open one and share ratings with comments."
+                actionLabel="Back to Home"
+                onAction={() => setActiveTab('home')}
+                className="mx-auto max-w-xl"
+              />
             ) : (
-              turfs.map((turf) => (
-                <button
-                  key={turf.id}
-                  onClick={() => {
-                    setFeedbackTurf(turf);
-                  }}
-                  className="w-full text-left bg-white rounded-3xl p-4 border border-zinc-100 shadow-sm hover:border-emerald-200 transition"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl overflow-hidden bg-zinc-100">
-                      <img src={turf.image_url} alt={turf.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              <div className="desktop-feedback-grid space-y-4">
+                {turfs.map((turf) => (
+                  <button
+                    key={turf.id}
+                    onClick={() => {
+                      setFeedbackTurf(turf);
+                    }}
+                    className="w-full text-left bg-white rounded-3xl p-4 border border-zinc-100 shadow-sm hover:border-emerald-200 transition"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-2xl overflow-hidden bg-zinc-100">
+                        <img src={turf.image_url} alt={turf.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-zinc-900">{turf.name}</h3>
+                        <p className="text-xs text-zinc-500 line-clamp-2">{turf.description}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-bold text-zinc-900">{turf.name}</h3>
-                      <p className="text-xs text-zinc-500 line-clamp-2">{turf.description}</p>
-                    </div>
-                  </div>
-                </button>
-              ))
+                  </button>
+                ))}
+              </div>
             )}
           </div>
         </div>
@@ -1203,8 +1225,8 @@ function AppContent() {
 
     if (activeTab === 'profile') {
       return (
-        <div className="flex-1 flex flex-col pb-24">
-          <header className="p-6 flex items-center gap-4 bg-white/50 backdrop-blur-md sticky top-0 z-20">
+        <div className="flex-1 flex flex-col pb-24 desktop-page-shell desktop-profile-shell">
+          <header className="p-6 flex items-center gap-4 bg-white/50 backdrop-blur-md sticky top-0 z-20 desktop-page-header">
             <button 
               onClick={() => setActiveTab('home')}
               className="w-10 h-10 rounded-xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 shadow-md active:scale-90 transition-all z-30"
@@ -1213,7 +1235,7 @@ function AppContent() {
             </button>
             <h2 className="text-xl font-display font-bold text-zinc-900">My Profile</h2>
           </header>
-          <div className="p-8 flex flex-col items-center justify-center text-center">
+          <div className="p-8 flex flex-col items-center justify-center text-center desktop-profile-layout">
             <AppAvatar
               src={profilePhotoPreview || firebaseProfile?.avatar_url || profile?.avatar_url || ''}
               name={firebaseProfile?.full_name || profile?.full_name}
@@ -1224,7 +1246,7 @@ function AppContent() {
             <h2 className="text-2xl font-bold text-zinc-900">{firebaseProfile?.full_name || profile?.full_name}</h2>
             <p className="text-zinc-500 capitalize mb-8">{firebaseProfile?.role || profile?.role}</p>
             
-            <div className="w-full space-y-3">
+            <div className="w-full space-y-3 desktop-profile-actions">
               <div className="bg-white rounded-3xl p-2 border border-zinc-100 shadow-sm">
                 <button 
                   onClick={() => setIsSettingsOpen(true)}
@@ -1375,7 +1397,7 @@ function AppContent() {
     }
 
     return (
-      <div className="flex-1 flex flex-col pb-24">
+      <div className="flex-1 flex flex-col pb-24 desktop-page-shell desktop-home-shell">
         {supabaseError && (
           <div className="mx-6 mt-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex flex-col gap-3 text-red-600">
             <div className="flex items-center gap-3">
@@ -1392,7 +1414,7 @@ function AppContent() {
         )}
         
         {/* Header */}
-        <header className="p-6 flex justify-between items-center bg-white/50 backdrop-blur-md sticky top-0 z-20">
+        <header className="p-6 flex justify-between items-center bg-white/50 backdrop-blur-md sticky top-0 z-20 desktop-page-header">
           <div className="relative">
             <h1 className="font-display text-2xl font-bold tracking-tight text-gradient">TurfBook</h1>
             <button
@@ -1538,7 +1560,7 @@ function AppContent() {
                 initial="initial"
                 animate="animate"
                 exit="exit"
-                className="fixed top-[4.5rem] right-4 z-50 bg-white rounded-2xl shadow-xl border border-zinc-100 w-80 max-h-96 overflow-y-auto scrollbar-thin"
+                className="desktop-notifications-popover fixed top-[4.5rem] right-4 z-50 bg-white rounded-2xl shadow-xl border border-zinc-100 w-80 max-h-96 overflow-y-auto scrollbar-thin"
               >
                 <div className="sticky top-0 bg-white p-4 border-b border-zinc-100 z-10">
                   <div className="flex justify-between items-center">
@@ -1605,206 +1627,235 @@ function AppContent() {
             </>
           )}
         </AnimatePresence>
-
-        {/* Search Section */}
-        <div className="px-6 mb-6 space-y-4">
-          <div className="bg-white p-4 rounded-[2rem] shadow-sm border border-zinc-100">
-            <div className="flex gap-3">
-              <div className="flex-1 bg-zinc-50 rounded-2xl flex items-center px-4 py-3 gap-3 text-zinc-400 border border-zinc-100">
-                <Search size={18} />
-                <input
-                  type="text"
-                  placeholder="Find your favorite turf..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-transparent border-none outline-none text-zinc-900 w-full text-sm font-medium"
-                />
-              </div>
-              <button
-                onClick={() => setShowQRScanner(true)}
-                className="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-md active:scale-90 transition-all hover:bg-emerald-600"
-                title="Scan QR Code"
-              >
-                <QrCode size={20} strokeWidth={2.5} />
-              </button>
-            </div>
-          </div>
-
-          <SearchFilters
-            priceRange={priceRange}
-            selectedCategories={filterCategories}
-            selectedCity={selectedCity}
-            minRating={minRating}
-            selectedAmenities={selectedAmenities}
-            onPriceChange={setPriceRange}
-            onCategoryChange={(cat) => {
-              setFilterCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]);
-            }}
-            onCityChange={setSelectedCity}
-            onRatingChange={setMinRating}
-            onAmenityChange={(amenity) => {
-              setSelectedAmenities(prev => prev.includes(amenity) ? prev.filter(a => a !== amenity) : [...prev, amenity]);
-            }}
-            onClearAll={() => {
-              setPriceRange([0, 5000]);
-              setFilterCategories([]);
-              setMinRating(0);
-              setSelectedAmenities([]);
-            }}
-            activeFilters={[...filterCategories, ...(minRating > 0 ? ['rating'] : []), ...(selectedAmenities.length > 0 ? selectedAmenities : [])].length}
-          />
-        </div>
-
-        {/* Categories */}
-        <div className="px-6 mb-6">
-          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 flex-nowrap scroll-smooth">
-            {['All', 'Football', 'Cricket', 'Tennis', 'Badminton'].map((cat) => (
-              <motion.button
-                key={cat}
-                whileTap={{ scale: 0.96 }}
-                whileHover={shouldReduceMotion ? undefined : { y: -1.5 }}
-                onClick={() => setSelectedCategory(cat)}
-                className={cn(
-                  "px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 border flex-shrink-0",
-                  selectedCategory === cat 
-                    ? "bg-zinc-900 text-white border-zinc-900 shadow-xl shadow-zinc-900/20 scale-105" 
-                    : "bg-white text-zinc-400 border-zinc-100 hover:border-zinc-200"
-                )}
-              >
-                {cat}
-              </motion.button>
-            ))}
-          </div>
-        </div>
-
-        {/* Date Scroller */}
-        <div className="px-6 mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-display font-bold text-zinc-900">Select Date</h2>
-            <div className="relative">
-              <input 
-                type="date" 
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10"
-              />
-              <div className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-xl border border-emerald-100">
-                <Calendar size={14} />
-                <span className="text-[10px] font-black uppercase tracking-widest">
-                  {new Date(selectedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 flex-nowrap scroll-smooth">
-            {[...Array(14)].map((_, i) => {
-              const date = new Date();
-              date.setDate(date.getDate() + i);
-              const dateStr = date.toISOString().split('T')[0];
-              const isSelected = selectedDate === dateStr;
-              return (
-                <motion.button
-                  key={i}
-                  whileTap={{ scale: 0.95 }}
-                  whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-                  onClick={() => setSelectedDate(dateStr)}
-                  className={cn(
-                    "flex flex-col items-center justify-center min-w-[64px] h-20 rounded-2xl border-2 transition-all duration-300 flex-shrink-0",
-                    isSelected 
-                      ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-105" 
-                      : "bg-white border-zinc-50 text-zinc-400"
-                  )}
-                >
-                  <span className="text-[10px] font-black uppercase tracking-widest opacity-60">
-                    {date.toLocaleDateString('en-US', { weekday: 'short' })}
-                  </span>
-                  <span className="text-lg font-black">
-                    {date.getDate()}
-                  </span>
-                </motion.button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Featured Section */}
-        <motion.div
-          style={shouldReduceMotion ? undefined : { y: heroParallaxY }}
-          className="px-6 mb-8"
-        >
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-display font-bold text-zinc-900">
-              {selectedCity === 'Nearby' ? 'Popular Near You' : `Popular in ${selectedCity}`}
-            </h2>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              whileHover={shouldReduceMotion ? undefined : { y: -1 }}
-              className="text-emerald-600 text-xs font-bold"
-            >
-              See All
-            </motion.button>
-          </div>
-          <motion.div
-            variants={staggerContainerVariants}
-            initial={shouldReduceMotion ? false : 'initial'}
-            animate="animate"
-            className="space-y-5"
-          >
-            {filteredTurfs.length === 0 ? (
-              <div className="text-center py-10">
-                <p className="text-zinc-400">No turfs found in this area.</p>
-              </div>
-            ) : (
-              filteredTurfs.map((turf) => (
-                <motion.div 
-                  key={turf.id}
-                  variants={staggerItemVariants}
-                  layoutId={`card-${turf.id}`}
-                  {...(shouldReduceMotion ? { whileTap: { scale: 0.98 } } : card3dInteraction)}
-                  onClick={() => setSelectedTurf(turf)}
-                  style={shouldReduceMotion ? undefined : { transformStyle: 'preserve-3d' }}
-                  className="bg-white rounded-[2.5rem] overflow-hidden border border-zinc-100 shadow-sm group cursor-pointer card-shadow-hover transition-all duration-500"
-                >
-                  <div className="relative h-56">
-                    <img 
-                      src={turf.image_url} 
-                      alt={turf.name} 
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      referrerPolicy="no-referrer"
+        <VisualHeroFrame className="mx-6 mb-8" density={14} speed={0.55} amplitude={16}>
+          <div className="desktop-home-layout p-4">
+            <aside className="desktop-home-controls space-y-6">
+            {/* Search Section */}
+            <div className="space-y-4">
+              <div className="bg-white p-4 rounded-[2rem] shadow-sm border border-zinc-100">
+                <div className="flex gap-3">
+                  <div className="flex-1 bg-zinc-50 rounded-2xl flex items-center px-4 py-3 gap-3 text-zinc-400 border border-zinc-100">
+                    <Search size={18} />
+                    <input
+                      type="text"
+                      placeholder="Find your favorite turf..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="bg-transparent border-none outline-none text-zinc-900 w-full text-sm font-medium"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-2.5 py-1 rounded-xl flex items-center gap-1 shadow-sm">
-                      <Star size={14} className="text-yellow-500 fill-yellow-500" />
-                      <span className="text-xs font-bold text-zinc-900">{getTurfRating(turf) != null ? getTurfRating(turf).toFixed(1) : '-'}</span>
-                    </div>
-                    <div className="absolute top-4 left-4 bg-emerald-500 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.25em] shadow-sm">
-                      {turf.feedback_count || 0} feedback
-                    </div>
-                    <div className="absolute bottom-4 left-4 flex gap-2">
-                      <span className="bg-emerald-500 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">
-                        {turf.type}
+                  </div>
+                  <button
+                    onClick={() => setShowQRScanner(true)}
+                    className="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-md active:scale-90 transition-all hover:bg-emerald-600"
+                    title="Scan QR Code"
+                  >
+                    <QrCode size={20} strokeWidth={2.5} />
+                  </button>
+                </div>
+              </div>
+
+              <SearchFilters
+                priceRange={priceRange}
+                selectedCategories={filterCategories}
+                selectedCity={selectedCity}
+                minRating={minRating}
+                selectedAmenities={selectedAmenities}
+                onPriceChange={setPriceRange}
+                onCategoryChange={(cat) => {
+                  setFilterCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]);
+                }}
+                onCityChange={setSelectedCity}
+                onRatingChange={setMinRating}
+                onAmenityChange={(amenity) => {
+                  setSelectedAmenities(prev => prev.includes(amenity) ? prev.filter(a => a !== amenity) : [...prev, amenity]);
+                }}
+                onClearAll={() => {
+                  setPriceRange([0, 5000]);
+                  setFilterCategories([]);
+                  setMinRating(0);
+                  setSelectedAmenities([]);
+                }}
+                activeFilters={[...filterCategories, ...(minRating > 0 ? ['rating'] : []), ...(selectedAmenities.length > 0 ? selectedAmenities : [])].length}
+              />
+            </div>
+
+            {/* Categories */}
+            <div>
+              <div className="desktop-category-grid flex gap-4 overflow-x-auto no-scrollbar pb-2 flex-nowrap scroll-smooth">
+                {['All', 'Football', 'Cricket', 'Tennis', 'Badminton'].map((cat) => (
+                  <motion.button
+                    key={cat}
+                    whileTap={{ scale: 0.96 }}
+                    whileHover={shouldReduceMotion ? undefined : { y: -1.5 }}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={cn(
+                      "px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 border flex-shrink-0",
+                      selectedCategory === cat 
+                        ? "bg-zinc-900 text-white border-zinc-900 shadow-xl shadow-zinc-900/20 scale-105" 
+                        : "bg-white text-zinc-400 border-zinc-100 hover:border-zinc-200"
+                    )}
+                  >
+                    {cat}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            {/* Date Scroller */}
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="font-display font-bold text-zinc-900">Select Date</h2>
+                <div className="relative">
+                  <input 
+                    type="date" 
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10"
+                  />
+                  <div className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-xl border border-emerald-100">
+                    <Calendar size={14} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">
+                      {new Date(selectedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="desktop-date-grid flex gap-3 overflow-x-auto no-scrollbar pb-2 flex-nowrap scroll-smooth">
+                {[...Array(14)].map((_, i) => {
+                  const date = new Date();
+                  date.setDate(date.getDate() + i);
+                  const dateStr = date.toISOString().split('T')[0];
+                  const isSelected = selectedDate === dateStr;
+                  return (
+                    <motion.button
+                      key={i}
+                      whileTap={{ scale: 0.95 }}
+                      whileHover={shouldReduceMotion ? undefined : { y: -2 }}
+                      onClick={() => setSelectedDate(dateStr)}
+                      className={cn(
+                        "flex flex-col items-center justify-center min-w-[64px] h-20 rounded-2xl border-2 transition-all duration-300 flex-shrink-0",
+                        isSelected 
+                          ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-105" 
+                          : "bg-white border-zinc-50 text-zinc-400"
+                      )}
+                    >
+                      <span className="text-[10px] font-black uppercase tracking-widest opacity-60">
+                        {date.toLocaleDateString('en-US', { weekday: 'short' })}
                       </span>
-                    </div>
-                  </div>
-                  <div className="p-5">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-display font-bold text-zinc-900 text-lg leading-tight">{turf.name}</h3>
-                      <div className="flex items-baseline gap-0.5">
-                        <span className="text-emerald-600 font-black text-xl">{formatCurrency(turf.price_per_hour)}</span>
-                        <span className="text-zinc-400 text-[10px] font-bold">/hr</span>
-                      </div>
-                    </div>
-                  </div>
+                      <span className="text-lg font-black">
+                        {date.getDate()}
+                      </span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
+            </aside>
+
+            {/* Featured Section */}
+            <motion.section
+              style={shouldReduceMotion ? undefined : { y: heroParallaxY }}
+              className="desktop-home-feed"
+            >
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="font-display font-bold text-zinc-900">
+                    {selectedCity === 'Nearby' ? 'Popular Near You' : `Popular in ${selectedCity}`}
+                  </h2>
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    whileHover={shouldReduceMotion ? undefined : { y: -1 }}
+                    className="text-emerald-600 text-xs font-bold"
+                  >
+                    See All
+                  </motion.button>
+                </div>
+                <motion.div
+                  variants={staggerContainerVariants}
+                  initial={shouldReduceMotion ? false : 'initial'}
+                  animate="animate"
+                  className="desktop-featured-grid space-y-5"
+                >
+                  {filteredTurfs.length === 0 ? (
+                    <DashboardEmptyState
+                      icon={Search}
+                      title={hasActiveTurfFilters ? 'No turfs match these filters' : 'No turfs found in this area'}
+                      message={hasActiveTurfFilters
+                        ? 'Try clearing filters or adjusting location/date to discover available turfs.'
+                        : 'We are still onboarding turfs for this location. Refresh to check again.'}
+                      actionLabel={hasActiveTurfFilters ? 'Clear Filters' : 'Refresh List'}
+                      onAction={() => {
+                        if (hasActiveTurfFilters) {
+                          setSearchQuery('');
+                          setSelectedCategory('All');
+                          setFilterCategories([]);
+                          setMinRating(0);
+                          setSelectedAmenities([]);
+                          setPriceRange([0, 5000]);
+                          setSelectedCity('Nearby');
+                        } else {
+                          fetchTurfs();
+                        }
+                      }}
+                      className="col-span-full"
+                      compact
+                    />
+                  ) : (
+                    filteredTurfs.map((turf) => (
+                      <motion.div 
+                        key={turf.id}
+                        variants={staggerItemVariants}
+                        layoutId={`card-${turf.id}`}
+                        {...(shouldReduceMotion ? { whileTap: { scale: 0.98 } } : card3dInteraction)}
+                        onClick={() => setSelectedTurf(turf)}
+                        style={shouldReduceMotion ? undefined : { transformStyle: 'preserve-3d' }}
+                        className="desktop-featured-card bg-white rounded-[2.5rem] overflow-hidden border border-zinc-100 shadow-sm group cursor-pointer card-shadow-hover transition-all duration-500"
+                      >
+                        <div className="relative h-56">
+                          <img 
+                            src={turf.image_url} 
+                            alt={turf.name} 
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                          <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-2.5 py-1 rounded-xl flex items-center gap-1 shadow-sm">
+                            <Star size={14} className="text-yellow-500 fill-yellow-500" />
+                            <span className="text-xs font-bold text-zinc-900">{getTurfRating(turf) != null ? getTurfRating(turf).toFixed(1) : '-'}</span>
+                          </div>
+                          <div className="absolute top-4 left-4 bg-emerald-500 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.25em] shadow-sm">
+                            {turf.feedback_count || 0} feedback
+                          </div>
+                          <div className="absolute bottom-4 left-4 flex gap-2">
+                            <span className="bg-emerald-500 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                              {turf.type}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="p-5">
+                          <div className="flex justify-between items-start mb-2">
+                            <h3 className="font-display font-bold text-zinc-900 text-lg leading-tight">{turf.name}</h3>
+                            <div className="flex items-baseline gap-0.5">
+                              <span className="text-emerald-600 font-black text-xl">{formatCurrency(turf.price_per_hour)}</span>
+                              <span className="text-zinc-400 text-[10px] font-bold">/hr</span>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
                 </motion.div>
-              ))
-            )}
-          </motion.div>
-        </motion.div>
+              </div>
+            </motion.section>
+          </div>
+        </VisualHeroFrame>
       </div>
     );
   };
 
-  if (isDesktopViewport) {
+  const enableDesktopPlaceholder = false;
+
+  if (enableDesktopPlaceholder && isDesktopViewport) {
     return (
       <div className="min-h-screen bg-zinc-950 text-white font-sans flex items-center justify-center p-6">
         <div className="max-w-4xl w-full rounded-[2rem] border border-white/10 bg-zinc-900/95 p-10 shadow-2xl shadow-black/40">
@@ -1871,10 +1922,10 @@ function AppContent() {
   }
 
   return (
-    <div className="ios-theme bg-zinc-100 min-h-screen font-sans">
+    <div className="ios-theme desktop-ios-theme bg-zinc-100 min-h-screen font-sans">
       <div
         ref={appScrollRef}
-        className="mobile-container overflow-y-auto"
+        className="mobile-container desktop-app-shell overflow-y-auto"
         style={{ touchAction: 'pan-y' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -1886,7 +1937,7 @@ function AppContent() {
         >
           {isRefreshing ? 'Refreshing...' : pullDistance >= 80 ? 'Release to refresh' : 'Pull down to refresh'}
         </div>
-        {showRotateWarning && (
+        {showRotateWarning && !isDesktopViewport && (
           <div className="mx-6 mt-6 p-4 rounded-3xl bg-yellow-50 border border-yellow-200 text-yellow-900 text-sm shadow-sm text-center">
             For the best experience, rotate your phone back to portrait mode. The app is optimized for mobile portrait view.
           </div>
@@ -1923,10 +1974,10 @@ function AppContent() {
               initial={shouldReduceMotion ? false : 'initial'}
               animate="animate"
               exit="exit"
-              className="flex-1 flex flex-col bg-white"
+              className="flex-1 flex flex-col bg-white desktop-detail-view"
             >
               {/* Detail Header */}
-              <div className="relative h-96">
+              <div className="desktop-detail-hero relative h-96">
                 <motion.img 
                   layoutId={`image-${selectedTurf.id}`}
                   src={selectedTurf.image_url} 
@@ -1966,7 +2017,7 @@ function AppContent() {
               </div>
 
               {/* Detail Content */}
-              <div className="flex-1 bg-white rounded-t-[3rem] -mt-10 p-8 relative z-10 shadow-2xl overflow-y-auto">
+              <div className="desktop-detail-content flex-1 bg-white rounded-t-[3rem] -mt-10 p-8 relative z-10 shadow-2xl overflow-y-auto">
                 <div className="flex gap-4 mb-8">
                   <div className="flex-1 bg-zinc-50 p-4 rounded-3xl border border-zinc-100 flex flex-col items-center gap-1">
                     <Clock size={20} className="text-emerald-500" />
@@ -2095,13 +2146,13 @@ function AppContent() {
 
         {/* Bottom Navigation */}
         {!selectedTurf && (
-          <div className="ios-tabbar-wrap fixed left-1/2 -translate-x-1/2 z-30">
-            <nav className="ios-tabbar flex items-center">
+          <div className="ios-tabbar-wrap desktop-tabbar-wrap fixed left-1/2 -translate-x-1/2 z-30">
+            <nav className="ios-tabbar desktop-tabbar flex items-center">
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setActiveTab('home')}
                 className={cn(
-                  "ios-tabbar-item flex items-center justify-center gap-2 transition-all duration-300 flex-1",
+                  "ios-tabbar-item desktop-tabbar-item flex items-center justify-center gap-2 transition-all duration-300 flex-1",
                   activeTab === 'home' && "is-active"
                 )}
               >
@@ -2112,7 +2163,7 @@ function AppContent() {
                 >
                   <Home size={20} className="flex-shrink-0" />
                 </motion.span>
-                {activeTab === 'home' && <span className="text-xs font-bold whitespace-nowrap">Home</span>}
+                <span className="text-xs font-bold whitespace-nowrap">Home</span>
               </motion.button>
               
               {(isOwner || isAdmin) && (
@@ -2120,7 +2171,7 @@ function AppContent() {
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setActiveTab('dashboard')}
                   className={cn(
-                    "ios-tabbar-item flex items-center justify-center gap-2 transition-all duration-300 flex-1",
+                    "ios-tabbar-item desktop-tabbar-item flex items-center justify-center gap-2 transition-all duration-300 flex-1",
                     activeTab === 'dashboard' && "is-active"
                   )}
                 >
@@ -2131,7 +2182,7 @@ function AppContent() {
                   >
                     <LayoutDashboard size={20} className="flex-shrink-0" />
                   </motion.span>
-                  {activeTab === 'dashboard' && <span className="text-xs font-bold whitespace-nowrap">{isAdmin ? 'Admin' : 'Manage'}</span>}
+                  <span className="text-xs font-bold whitespace-nowrap">{isAdmin ? 'Admin' : 'Manage'}</span>
                 </motion.button>
               )}
 
@@ -2139,7 +2190,7 @@ function AppContent() {
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setActiveTab('bookings')}
                 className={cn(
-                  "ios-tabbar-item flex items-center justify-center gap-2 transition-all duration-300 flex-1",
+                  "ios-tabbar-item desktop-tabbar-item flex items-center justify-center gap-2 transition-all duration-300 flex-1",
                   activeTab === 'bookings' && "is-active"
                 )}
               >
@@ -2150,14 +2201,14 @@ function AppContent() {
                 >
                   <CalendarDays size={20} className="flex-shrink-0" />
                 </motion.span>
-                {activeTab === 'bookings' && <span className="text-xs font-bold whitespace-nowrap">Bookings</span>}
+                <span className="text-xs font-bold whitespace-nowrap">Bookings</span>
               </motion.button>
 
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setActiveTab('feedback')}
                 className={cn(
-                  "ios-tabbar-item flex items-center justify-center gap-2 transition-all duration-300 flex-1",
+                  "ios-tabbar-item desktop-tabbar-item flex items-center justify-center gap-2 transition-all duration-300 flex-1",
                   activeTab === 'feedback' && "is-active"
                 )}
               >
@@ -2168,14 +2219,14 @@ function AppContent() {
                 >
                   <MessageCircle size={20} className="flex-shrink-0" />
                 </motion.span>
-                {activeTab === 'feedback' && <span className="text-xs font-bold whitespace-nowrap">Feedback</span>}
+                <span className="text-xs font-bold whitespace-nowrap">Feedback</span>
               </motion.button>
 
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setActiveTab('calendar')}
                 className={cn(
-                  "ios-tabbar-item flex items-center justify-center gap-2 transition-all duration-300 flex-1",
+                  "ios-tabbar-item desktop-tabbar-item flex items-center justify-center gap-2 transition-all duration-300 flex-1",
                   activeTab === 'calendar' && "is-active"
                 )}
               >
@@ -2186,14 +2237,14 @@ function AppContent() {
                 >
                   <Calendar size={20} className="flex-shrink-0" />
                 </motion.span>
-                {activeTab === 'calendar' && <span className="text-xs font-bold whitespace-nowrap">Calendar</span>}
+                <span className="text-xs font-bold whitespace-nowrap">Calendar</span>
               </motion.button>
 
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setActiveTab('profile')}
                 className={cn(
-                  "ios-tabbar-item flex items-center justify-center gap-2 transition-all duration-300 flex-1",
+                  "ios-tabbar-item desktop-tabbar-item flex items-center justify-center gap-2 transition-all duration-300 flex-1",
                   activeTab === 'profile' && "is-active"
                 )}
               >
@@ -2204,7 +2255,7 @@ function AppContent() {
                 >
                   <User size={20} className="flex-shrink-0" />
                 </motion.span>
-                {activeTab === 'profile' && <span className="text-xs font-bold whitespace-nowrap">Profile</span>}
+                <span className="text-xs font-bold whitespace-nowrap">Profile</span>
               </motion.button>
             </nav>
           </div>
@@ -2227,7 +2278,7 @@ function AppContent() {
                 initial={shouldReduceMotion ? false : 'initial'}
                 animate="animate"
                 exit="exit"
-                className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-[3rem] p-8 viewport-scroll"
+                className="booking-sheet fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-[3rem] p-8 viewport-scroll"
               >
                 <div className="w-16 h-1.5 bg-zinc-100 rounded-full mx-auto mb-10"></div>
                 

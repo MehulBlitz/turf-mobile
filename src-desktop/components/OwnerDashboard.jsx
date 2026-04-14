@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { Plus, Edit2, Trash2, Calendar, Loader2, X, Upload, Clock, Database, Camera as CameraIcon } from 'lucide-react';
 import CancellationModal from './CancellationModal';
+import DashboardEmptyState from './DashboardEmptyState';
 import AppAvatar from './common/AppAvatar';
 import { createNotification, generateQrToken, recordBookingCancellation, supabase } from '../lib/supabase';
 import { cn, formatCurrency } from '../lib/utils';
@@ -502,10 +503,10 @@ export default function OwnerDashboard({ user, onTurfUpdate }) {
   if (loading) return <div className="flex-1 flex items-center justify-center"><Loader2 className="animate-spin text-emerald-500" /></div>;
 
   return (
-    <div className="flex-1 flex flex-col p-6 pb-24 bg-zinc-50">
+    <div className="owner-dashboard flex-1 flex flex-col p-6 pb-24 bg-zinc-50">
       
       
-      <div className="flex justify-between items-center mb-8">
+      <div className="owner-toolbar flex justify-between items-center mb-8">
         <div className="flex gap-4 overflow-x-auto no-scrollbar pb-1">
           <button 
             onClick={() => setActiveView('turfs')}
@@ -558,58 +559,71 @@ export default function OwnerDashboard({ user, onTurfUpdate }) {
       </div>
 
       {activeView === 'turfs' ? (
-        <div className="space-y-4">
-          {turfs.map(turf => (
-            <div key={turf.id} className="bg-white p-4 rounded-3xl border border-zinc-100 shadow-sm flex gap-4">
-              <div className="w-24 h-24 rounded-2xl bg-zinc-100 overflow-hidden flex-shrink-0">
-                <img src={turf.image_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-zinc-900">{turf.name}</h3>
-                <div className="flex justify-between items-center">
-                  <span className="text-emerald-600 font-bold">{formatCurrency(turf.price_per_hour)}/hr</span>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => setEditingTurf(turf)}
-                      className="p-2 bg-zinc-100 text-zinc-600 rounded-lg"
-                    >
-                      <Edit2 size={14} />
-                    </button>
-                    <button 
-                      onClick={async () => {
-                        if (window.confirm('Are you sure you want to delete this turf?')) {
-                          try {
-                            const { error } = await supabase.from('turfs').delete().eq('id', turf.id);
-                            if (error) throw error;
-                            fetchMyTurfs();
-                          } catch (err) {
-                            alert(err.message);
+        <div className="owner-turfs-grid space-y-4">
+          {turfs.length === 0 ? (
+            <DashboardEmptyState
+              icon={Calendar}
+              title="No turfs yet"
+              message="Create your first turf to start receiving bookings and manage slot availability."
+              actionLabel="Add Turf"
+              onAction={() => setIsAdding(true)}
+              className="col-span-full"
+            />
+          ) : (
+            turfs.map(turf => (
+              <div key={turf.id} className="owner-turf-card bg-white p-4 rounded-3xl border border-zinc-100 shadow-sm flex gap-4">
+                <div className="w-24 h-24 rounded-2xl bg-zinc-100 overflow-hidden flex-shrink-0">
+                  <img src={turf.image_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-zinc-900">{turf.name}</h3>
+                  <div className="flex justify-between items-center">
+                    <span className="text-emerald-600 font-bold">{formatCurrency(turf.price_per_hour)}/hr</span>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => setEditingTurf(turf)}
+                        className="p-2 bg-zinc-100 text-zinc-600 rounded-lg"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                      <button 
+                        onClick={async () => {
+                          if (window.confirm('Are you sure you want to delete this turf?')) {
+                            try {
+                              const { error } = await supabase.from('turfs').delete().eq('id', turf.id);
+                              if (error) throw error;
+                              fetchMyTurfs();
+                            } catch (err) {
+                              alert(err.message);
+                            }
                           }
-                        }
-                      }}
-                      className="p-2 bg-red-50 text-red-500 rounded-lg"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                        }}
+                        className="p-2 bg-red-50 text-red-500 rounded-lg"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mt-3 text-[10px] text-zinc-500">
+                    {turf.blocked_slots?.length > 0 ? `${turf.blocked_slots.length} hidden slot${turf.blocked_slots.length > 1 ? 's' : ''}` : 'No hidden slots configured'}
                   </div>
                 </div>
-                <div className="mt-3 text-[10px] text-zinc-500">
-                  {turf.blocked_slots?.length > 0 ? `${turf.blocked_slots.length} hidden slot${turf.blocked_slots.length > 1 ? 's' : ''}` : 'No hidden slots configured'}
-                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       ) : activeView === 'bookings' ? (
-        <div className="space-y-4">
+        <div className="owner-bookings-grid space-y-4">
           {ownerBookings.length === 0 ? (
-            <div className="py-20 text-center text-zinc-400">
-              <Calendar size={48} className="mx-auto mb-4 opacity-20" />
-              <p>No bookings for your turfs yet</p>
-            </div>
+            <DashboardEmptyState
+              icon={Calendar}
+              title="No bookings yet"
+              message="New customer bookings for your turfs will appear here with quick confirm/reject controls."
+              className="col-span-full"
+            />
           ) : (
             ownerBookings.map(booking => (
-              <div key={booking.id} className="bg-white p-4 rounded-3xl border border-zinc-100 shadow-sm">
+              <div key={booking.id} className="owner-booking-card bg-white p-4 rounded-3xl border border-zinc-100 shadow-sm">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex items-center gap-3">
                     <AppAvatar

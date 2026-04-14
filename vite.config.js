@@ -16,7 +16,8 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(__dirname, 'src'),
+        'lucide-react': path.resolve(__dirname, 'src/lib/lucide-untitled.jsx'),
       },
     },
     server: {
@@ -32,7 +33,7 @@ export default defineConfig(({ mode }) => {
           manualChunks: {
             'react-core': ['react', 'react-dom'],
             'motion': ['motion/react'],
-            'lucide': ['lucide-react'],
+            'untitled-icons': ['@untitledui/icons'],
             'supabase': ['@supabase/supabase-js'],
           },
           // Optimize chunk file names for better caching
