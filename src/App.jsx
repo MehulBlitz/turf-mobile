@@ -25,7 +25,7 @@ import {
   MessageCircle
 } from 'lucide-react';
 import { cn, formatCurrency } from './lib/utils';
-import { supabase, isSupabaseConfigured, createBookingWithTicket, createNotification, fetchNotificationsForUser } from './lib/supabase';
+import { supabase, isSupabaseConfigured, createBookingWithTicket, createNotification, fetchNotificationsForUser, generateQrToken } from './lib/supabase';
 import AuthScreen from './components/AuthScreen';
 import OwnerDashboard from './components/OwnerDashboard';
 import AdminDashboard from './components/AdminDashboard';
@@ -621,7 +621,8 @@ function AppContent() {
           cancellation_reason: reasonData.reason,
           cancellation_notes: reasonData.notes,
           refund_amount: reasonData.refund_amount,
-          cancelled_by: 'customer'
+          cancelled_by: 'customer',
+          qr_token: generateQrToken(),
         })
         .eq('id', selectedCancellation.id);
       if (error) throw error;

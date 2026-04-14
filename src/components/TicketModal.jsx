@@ -226,26 +226,35 @@ Book your next game on TurfBook! 🏟️
 
             {showQR && (
               <div className="space-y-3">
-                <div className="bg-zinc-50 rounded-xl border-2 border-dashed border-zinc-200 p-4 flex items-center justify-center">
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=420x420&data=${encodeURIComponent(
-                      JSON.stringify({
-                        bookingId: showTicket.id,
-                        qrToken: showTicket.qr_token,
-                        ticketUrl: `https://turfbook.example/verify?bookingId=${showTicket.id}&qrToken=${showTicket.qr_token}`,
-                      })
-                    )}`}
-                    alt="QR Code"
-                    className="w-56 h-56"
-                  />
-                </div>
-                <div className="space-y-2 text-center">
-                  <p className="text-sm font-semibold text-zinc-900">Booking ID</p>
-                  <p className="text-xs text-zinc-500 break-all">{showTicket.id}</p>
-                  <p className="text-center text-xs text-zinc-500">
-                    Scan this QR code in the app on another device or use the Booking ID manually if needed.
-                  </p>
-                </div>
+                {isCancelled ? (
+                  <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-center text-red-700">
+                    <p className="font-bold mb-2">QR invalidated</p>
+                    <p>This booking was cancelled, so its QR ticket is no longer valid for entry.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="bg-zinc-50 rounded-xl border-2 border-dashed border-zinc-200 p-4 flex items-center justify-center">
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=420x420&data=${encodeURIComponent(
+                          JSON.stringify({
+                            bookingId: showTicket.id,
+                            qrToken: showTicket.qr_token,
+                            ticketUrl: `https://turfbook.example/verify?bookingId=${showTicket.id}&qrToken=${showTicket.qr_token}`,
+                          })
+                        )}`}
+                        alt="QR Code"
+                        className="w-56 h-56"
+                      />
+                    </div>
+                    <div className="space-y-2 text-center">
+                      <p className="text-sm font-semibold text-zinc-900">Booking ID</p>
+                      <p className="text-xs text-zinc-500 break-all">{showTicket.id}</p>
+                      <p className="text-center text-xs text-zinc-500">
+                        Scan this QR code in the app on another device or use the Booking ID manually if needed.
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             )}
             {!showQR && (

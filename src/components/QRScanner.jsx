@@ -81,13 +81,17 @@ export default function QRScanner({ onClose }) {
 
   const lookupBooking = async (rawData) => {
     const parsed = parseBookingPayload(rawData);
+    let booking = null;
+
     if (parsed.qrToken) {
-      return fetchBookingByQrToken(parsed.qrToken);
+      booking = await fetchBookingByQrToken(parsed.qrToken);
     }
-    if (parsed.bookingId) {
-      return fetchBookingById(parsed.bookingId);
+
+    if (!booking && parsed.bookingId) {
+      booking = await fetchBookingById(parsed.bookingId);
     }
-    return null;
+
+    return booking;
   };
 
   const getCodeReader = () => {
@@ -359,11 +363,30 @@ export default function QRScanner({ onClose }) {
 
             {scannedData && (
               <div className="space-y-4">
-                <div className="bg-green-50 rounded-2xl p-4 border-2 border-green-200 flex items-start gap-3">
-                  <CheckCircle2 size={24} className="text-green-600 flex-shrink-0 mt-1" />
+                <div className={`rounded-2xl p-4 flex items-start gap-3 ${scannedData.status === 'cancelled' ? 'bg-red-50 border border-red-200 text-red-700' : scannedData.status === 'pending' || scannedData.status === 'rejected' ? 'bg-yellow-50 border border-amber-200 text-amber-700' : 'bg-green-50 border-2 border-green-200 text-green-700'}`}>
+                  <CheckCircle2
+                    size={24}
+                    className={`${scannedData.status === 'cancelled' ? 'text-red-600' : scannedData.status === 'pending' || scannedData.status === 'rejected' ? 'text-amber-600' : 'text-green-600'} flex-shrink-0 mt-1`}
+                  />
                   <div>
-                    <p className="font-bold text-green-900">Ticket Scanned!</p>
-                    <p className="text-sm text-green-700">Booking details loaded</p>
+                    <p className="font-bold">
+                      {scannedData.status === 'cancelled'
+                        ? 'Ticket Cancelled'
+                        : scannedData.status === 'rejected'
+                          ? 'Ticket Rejected'
+                          : scannedData.status === 'pending'
+                            ? 'Booking Pending'
+                            : 'Ticket Scanned!'}
+                    </p>
+                    <p className="text-sm">
+                      {scannedData.status === 'cancelled'
+                        ? 'This booking was cancelled and the QR is no longer valid.'
+                        : scannedData.status === 'rejected'
+                          ? 'This booking has been rejected.'
+                          : scannedData.status === 'pending'
+                            ? 'This booking is not confirmed yet.'
+                            : 'Booking details loaded'}
+                    </p>
                   </div>
                 </div>
 
@@ -425,10 +448,22 @@ export default function QRScanner({ onClose }) {
                   </div>
                 )}
 
-                <div className="bg-blue-50 rounded-xl p-4 border border-blue-200 text-center">
-                  <p className="text-sm font-semibold text-blue-900">✅ Ready for Check-In</p>
-                  <p className="text-xs text-blue-700 mt-1">Booking verified and ready!</p>
-                </div>
+                {scannedData.status === 'confirmed' ? (
+                  <div className="bg-blue-50 rounded-xl p-4 border border-blue-200 text-center">
+                    <p className="text-sm font-semibold text-blue-900">✅ Ready for Check-In</p>
+                    <p className="text-xs text-blue-700 mt-1">Booking verified and ready!</p>
+                  </div>
+                ) : (
+                  <div className={`rounded-xl p-4 ${scannedData.status === 'cancelled' ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-yellow-50 border border-amber-200 text-amber-700'}`}>
+                    <p className="text-sm font-semibold">
+                      {scannedData.status === 'cancelled'
+                        ? 'Do not admit. Booking cancelled.'
+                        : scannedData.status === 'pending'
+                          ? 'Booking not confirmed yet.'
+                          : 'This ticket is invalid.'}
+                    </p>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-3">
                   <button onClick={handleRescan} className="py-3 bg-emerald-50 text-emerald-600 rounded-2xl font-bold active:scale-95 transition-all">

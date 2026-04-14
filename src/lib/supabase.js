@@ -83,7 +83,7 @@ export const fetchTurfRatingSummary = async (turfId) => {
   return { average, count };
 };
 
-const generateQrToken = () => {
+export const generateQrToken = () => {
   const globalCrypto = typeof globalThis !== 'undefined' ? globalThis.crypto : undefined;
   if (globalCrypto && typeof globalCrypto.randomUUID === 'function') {
     return globalCrypto.randomUUID();

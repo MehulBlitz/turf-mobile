@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { Plus, Edit2, Trash2, Calendar, Loader2, X, Upload, Clock, Database, Camera as CameraIcon } from 'lucide-react';
 import CancellationModal from './CancellationModal';
-import { createNotification, supabase } from '../lib/supabase';
+import { createNotification, generateQrToken, supabase } from '../lib/supabase';
 import { cn, formatCurrency } from '../lib/utils';
 import { capturePhoto, pickPhotoFromGallery } from '../lib/capacitorPlugins';
 
@@ -367,7 +367,8 @@ export default function OwnerDashboard({ user, onTurfUpdate }) {
         cancellation_reason: reasonData.reason,
         cancellation_notes: reasonData.notes,
         refund_amount: reasonData.refund_amount,
-        cancelled_by: 'owner'
+        cancelled_by: 'owner',
+        qr_token: generateQrToken(),
       }).eq('id', booking.id);
       if (error) throw error;
       await createNotification({
