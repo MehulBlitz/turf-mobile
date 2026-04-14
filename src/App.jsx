@@ -816,17 +816,23 @@ function AppContent() {
         booking_status: 'booked',
       });
 
-      setShowTicket({
+      const newBooking = {
         ...data,
         turf: selectedTurf,
+        booking_status: data.booking_status || 'booked',
+      };
+
+      setShowTicket({
+        ...newBooking,
         slot: selectedSlot,
         date: selectedDate
       });
+      setBookings((prevBookings) => [newBooking, ...(prevBookings || [])]);
       setIsProcessingPayment(false);
       setIsBooking(false);
       setPaymentStep(false);
       setSelectedSlot(null);
-      fetchUserBookings(session.user.id);
+      await fetchUserBookings(session.user.id);
 
       // Mark booking in calendar
       await addBookingToCalendar({
