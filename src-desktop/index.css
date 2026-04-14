@@ -277,7 +277,7 @@
     min-height: 100vh;
     padding: 18px;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     isolation: isolate;
     background:
       radial-gradient(110% 92% at 10% -18%, rgba(255, 159, 252, 0.15), transparent 64%),
@@ -321,12 +321,13 @@
     min-height: calc(100vh - 36px);
     margin: 0 auto;
     border-radius: 2.55rem;
-    padding-left: 116px;
+    padding-left: 120px;
     padding-right: 28px;
     padding-top: 18px;
     padding-bottom: 28px;
     position: relative;
     z-index: 2;
+    overflow: visible;
     background:
       radial-gradient(120% 90% at 0% -12%, rgba(14, 165, 140, 0.1), transparent 58%),
       radial-gradient(120% 90% at 100% 0%, rgba(245, 158, 11, 0.09), transparent 55%),
