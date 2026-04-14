@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, CheckCircle2, AlertCircle, QrCode as QrCodeIcon, Camera, Image as ImageIcon } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 import { capturePhoto, checkCameraPermission, pickPhotoFromGallery, requestCameraPermission } from '../lib/capacitorPlugins';
 import { fetchBookingById, fetchBookingByQrToken, supabase } from '../lib/supabase';
 import { formatCurrency } from '../lib/utils';
@@ -110,6 +111,12 @@ export default function QRScanner({ onClose }) {
     return codeReaderRef.current;
   };
 
+  const waitForVideoMount = async () => {
+    await new Promise((resolve) => window.requestAnimationFrame(resolve));
+    await new Promise((resolve) => window.requestAnimationFrame(resolve));
+    return videoRef.current;
+  };
+
   const scanQRFromPhoto = async (photoUrl) => {
     try {
       const image = document.createElement('img');
@@ -199,21 +206,26 @@ export default function QRScanner({ onClose }) {
     setLiveScanError(null);
 
     try {
-      const permissions = await checkCameraPermission();
-      if (permissions.camera !== 'granted') {
-        const requested = await requestCameraPermission();
-        if (requested.camera !== 'granted') {
-          throw new Error('Camera permission is required for live scanning.');
+      const isWeb = Capacitor.getPlatform() === 'web';
+
+      if (!isWeb) {
+        const permissions = await checkCameraPermission();
+        if (permissions.camera !== 'granted') {
+          const requested = await requestCameraPermission();
+          if (requested.camera !== 'granted') {
+            throw new Error('Camera permission is required for live scanning.');
+          }
         }
       }
 
-      const codeReader = getCodeReader();
-      const videoElement = videoRef.current;
+      setIsLiveScanning(true);
+
+      const videoElement = await waitForVideoMount();
       if (!videoElement) {
         throw new Error('QR scan video element is not available.');
       }
 
-      setIsLiveScanning(true);
+      const codeReader = getCodeReader();
 
       await codeReader.decodeFromVideoDevice(null, videoElement, async (result, error) => {
         if (result) {
@@ -227,13 +239,26 @@ export default function QRScanner({ onClose }) {
           } else {
             setLiveScanError(lookupResult.hasQrToken ? 'QR token is invalid or expired.' : 'QR scanned but booking was not found.');
           }
-        } else if (error) {
-          setLiveScanError(error.message || 'Scanning failed.');
+        } else if (error && error.name !== 'NotFoundException') {
+          const deniedMessage =
+            error?.name === 'NotAllowedError' || /permission denied/i.test(error?.message || '');
+          if (deniedMessage) {
+            setLiveScanError('Camera access was denied. Allow camera permission and try Live Scan again.');
+            await stopLiveScan();
+          } else {
+            setLiveScanError(error.message || 'Scanning failed.');
+          }
         }
       });
     } catch (err) {
       console.error('Live scan error:', err);
-      setLiveScanError(err.message || 'Could not start camera scanner.');
+      const deniedMessage =
+        err?.name === 'NotAllowedError' || /permission denied/i.test(err?.message || '');
+      setLiveScanError(
+        deniedMessage
+          ? 'Camera access was denied. Allow camera permission and try Live Scan again.'
+          : err.message || 'Could not start camera scanner.'
+      );
       setIsLiveScanning(false);
     }
   };
@@ -304,9 +329,6 @@ export default function QRScanner({ onClose }) {
                         >
                           Stop Live Scan
                         </button>
-                        {liveScanError && (
-                          <p className="text-xs text-red-600">{liveScanError}</p>
-                        )}
                       </div>
                     )}
                     <div className="grid grid-cols-1 gap-3">
@@ -335,6 +357,9 @@ export default function QRScanner({ onClose }) {
                         <span className="text-sm">Live Scan</span>
                       </button>
                     </div>
+                    {liveScanError && (
+                      <p className="text-xs text-red-600">{liveScanError}</p>
+                    )}
                   </>
                 ) : null}
 
