@@ -96,6 +96,13 @@ export default function OwnerDashboard({ user, onTurfUpdate }) {
         )
         .map((booking) => booking.id);
 
+      const cancelledBookingIds = (data || [])
+        .filter((booking) =>
+          booking.status === 'cancelled' &&
+          booking.booking_status !== 'cancelled'
+        )
+        .map((booking) => booking.id);
+
       if (expiredBookingIds.length > 0) {
         await supabase
           .from('bookings')
@@ -103,14 +110,23 @@ export default function OwnerDashboard({ user, onTurfUpdate }) {
           .in('id', expiredBookingIds);
       }
 
+      if (cancelledBookingIds.length > 0) {
+        await supabase
+          .from('bookings')
+          .update({ booking_status: 'cancelled' })
+          .in('id', cancelledBookingIds);
+      }
+
       const normalizedBookings = (data || []).map((booking) => {
         let booking_status = booking.booking_status || 'booked';
-        if (booking.status !== 'cancelled' && booking.status !== 'rejected') {
-          if (booking.end_time && new Date(booking.end_time) < now) {
-            booking_status = 'time is gone';
-          } else {
-            booking_status = 'booked';
-          }
+        if (booking.status === 'cancelled') {
+          booking_status = 'cancelled';
+        } else if (booking.status === 'rejected') {
+          booking_status = booking.booking_status || 'rejected';
+        } else if (booking.end_time && new Date(booking.end_time) < now) {
+          booking_status = 'time is gone';
+        } else {
+          booking_status = 'booked';
         }
         return { ...booking, booking_status };
       });
