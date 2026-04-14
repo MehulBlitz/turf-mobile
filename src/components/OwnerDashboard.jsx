@@ -152,6 +152,27 @@ export default function OwnerDashboard({ user, onTurfUpdate }) {
     }
   }, [user.id]);
 
+  useEffect(() => {
+    const channel = supabase
+      .channel(`owner-bookings-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bookings'
+        },
+        () => {
+          fetchOwnerBookings();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchOwnerBookings, user.id]);
+
   // New state for enhanced form
   const [selectedAmenities, setSelectedAmenities] = useState([]);
   const [otherAmenity, setOtherAmenity] = useState('');
