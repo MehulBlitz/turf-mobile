@@ -614,7 +614,19 @@ function AppContent() {
   const handleCancelConfirm = async (reasonData) => {
     if (!selectedCancellation) return;
     try {
-      const { error } = await supabase
+      const { data: latestBooking, error: latestError } = await supabase
+        .from('bookings')
+        .select('status')
+        .eq('id', selectedCancellation.id)
+        .single();
+      if (latestError) throw latestError;
+      if (!latestBooking || latestBooking.status === 'cancelled' || latestBooking.status === 'rejected') {
+        alert('This booking has already been cancelled or is no longer eligible for cancellation.');
+        setSelectedCancellation(null);
+        return;
+      }
+
+      const { data, error } = await supabase
         .from('bookings')
         .update({
           status: 'cancelled',
@@ -624,8 +636,16 @@ function AppContent() {
           cancelled_by: 'customer',
           qr_token: generateQrToken(),
         })
-        .eq('id', selectedCancellation.id);
+        .in('status', ['pending', 'confirmed'])
+        .eq('id', selectedCancellation.id)
+        .select()
+        .single();
       if (error) throw error;
+      if (!data) {
+        alert('This booking is no longer eligible for cancellation.');
+        setSelectedCancellation(null);
+        return;
+      }
       await fetchUserBookings(session.user.id);
       await createNotification({
         recipient_id: session.user.id,
