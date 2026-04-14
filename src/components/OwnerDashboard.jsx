@@ -226,11 +226,26 @@ export default function OwnerDashboard({ user, onTurfUpdate }) {
   async function handleBookingStatus(bookingId, status) {
     setProcessingBooking(bookingId);
     try {
+      const updatePayload = status === 'confirmed'
+        ? { status: 'confirmed', booking_status: 'booked' }
+        : status === 'rejected'
+          ? { status: 'rejected', booking_status: 'cancelled', cancelled_by: 'owner' }
+          : { status };
+
       const { error } = await supabase
         .from('bookings')
-        .update({ status })
+        .update(updatePayload)
         .eq('id', bookingId);
       if (error) throw error;
+
+      setOwnerBookings((prevBookings) =>
+        (prevBookings || []).map((booking) =>
+          booking.id === bookingId
+            ? { ...booking, ...updatePayload }
+            : booking
+        )
+      );
+
       await fetchOwnerBookings();
     } catch (err) {
       alert(err.message);
@@ -444,10 +459,18 @@ export default function OwnerDashboard({ user, onTurfUpdate }) {
       .maybeSingle();
       if (error) throw error;
       if (!data) {
-        alert('This booking is no longer eligible for cancellation.');
+        alert('This booking cancellation could not be completed. Please refresh and try again.');
         setSelectedCancelBooking(null);
         return;
       }
+
+      setOwnerBookings((prevBookings) =>
+        (prevBookings || []).map((entry) =>
+          entry.id === data.id
+            ? { ...entry, ...data, booking_status: 'cancelled' }
+            : entry
+        )
+      );
 
       await recordBookingCancellation({
         booking_id: booking.id,
@@ -618,7 +641,7 @@ export default function OwnerDashboard({ user, onTurfUpdate }) {
                   </div>
                   
                   <div className="flex gap-2">
-                    {booking.status === 'pending' && (
+                    {booking.booking_status === 'booked' && booking.status === 'pending' && (
                       <>
                         <button 
                           onClick={() => handleBookingStatus(booking.id, 'confirmed')}
@@ -639,7 +662,7 @@ export default function OwnerDashboard({ user, onTurfUpdate }) {
                       </>
                     )}
 
-                    {booking.booking_status !== 'cancelled' && booking.status === 'confirmed' && new Date(booking.start_time) > new Date() && (
+                    {booking.booking_status === 'booked' && booking.status === 'confirmed' && new Date(booking.start_time) > new Date() && (
                       <button
                         onClick={() => setSelectedCancelBooking(booking)}
                         className="px-3 py-1.5 bg-red-500 text-white text-[10px] font-bold uppercase rounded-lg shadow-sm hover:bg-red-600"

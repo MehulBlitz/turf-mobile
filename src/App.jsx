@@ -706,11 +706,11 @@ function AppContent() {
     try {
       const { data: latestBooking, error: latestError } = await supabase
         .from('bookings')
-        .select('status')
+        .select('status, booking_status')
         .eq('id', selectedCancellation.id)
         .maybeSingle();
       if (latestError) throw latestError;
-      if (!latestBooking || latestBooking.status === 'cancelled' || latestBooking.status === 'rejected') {
+      if (!latestBooking || latestBooking.status === 'cancelled' || latestBooking.booking_status === 'cancelled' || latestBooking.status === 'rejected') {
         alert('This booking has already been cancelled or is no longer eligible for cancellation.');
         setSelectedCancellation(null);
         return;
@@ -732,10 +732,18 @@ function AppContent() {
         .maybeSingle();
       if (error) throw error;
       if (!data) {
-        alert('This booking is no longer eligible for cancellation.');
+        alert('This booking cancellation could not be completed. Please refresh and try again.');
         setSelectedCancellation(null);
         return;
       }
+
+      setBookings((prevBookings) =>
+        (prevBookings || []).map((booking) =>
+          booking.id === data.id
+            ? { ...booking, ...data, booking_status: 'cancelled' }
+            : booking
+        )
+      );
 
       await recordBookingCancellation({
         booking_id: selectedCancellation.id,

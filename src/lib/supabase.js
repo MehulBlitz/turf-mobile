@@ -113,7 +113,7 @@ export const fetchBookingByQrToken = async (token) => {
     .from('bookings')
     .select('*, turfs(*)')
     .eq('qr_token', token)
-    .single();
+    .maybeSingle();
   handleError(error);
   return data;
 };
@@ -124,7 +124,7 @@ export const fetchBookingById = async (bookingId) => {
     .from('bookings')
     .select('*, turfs(*)')
     .eq('id', bookingId)
-    .single();
+    .maybeSingle();
   handleError(error);
   return data;
 };

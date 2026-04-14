@@ -102,6 +102,7 @@ create table if not exists turf_comments (
 alter table profiles enable row level security;
 alter table turfs enable row level security;
 alter table bookings enable row level security;
+alter table booking_cancellations enable row level security;
 alter table notifications enable row level security;
 alter table turf_feedback enable row level security;
 alter table turf_comments enable row level security;
@@ -143,9 +144,49 @@ create policy "Owners can view bookings for their turfs" on bookings for select 
 drop policy if exists "Users can create own bookings" on bookings;
 create policy "Users can create own bookings" on bookings for insert with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own bookings" on bookings;
+create policy "Users can update own bookings" on bookings for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "Owners can update bookings for their turfs" on bookings;
+create policy "Owners can update bookings for their turfs" on bookings for update using (
+  exists (select 1 from turfs where id = turf_id and owner_id = auth.uid())
+) with check (
+  exists (select 1 from turfs where id = turf_id and owner_id = auth.uid())
+);
+
 drop policy if exists "Admins can view all bookings" on bookings;
 create policy "Admins can view all bookings" on bookings for select using (
   exists (select 1 from profiles where id = auth.uid() and role = 'admin')
+);
+
+drop policy if exists "Admins can update all bookings" on bookings;
+create policy "Admins can update all bookings" on bookings for update using (
+  exists (select 1 from profiles where id = auth.uid() and role = 'admin')
+) with check (
+  exists (select 1 from profiles where id = auth.uid() and role = 'admin')
+);
+
+-- Policies for booking cancellations audit
+drop policy if exists "Users can view related booking cancellations" on booking_cancellations;
+create policy "Users can view related booking cancellations" on booking_cancellations for select using (
+  exists (
+    select 1 from bookings b
+    where b.id = booking_id and (
+      b.user_id = auth.uid() or
+      exists (select 1 from turfs t where t.id = b.turf_id and t.owner_id = auth.uid())
+    )
+  )
+);
+
+drop policy if exists "Users can insert related booking cancellations" on booking_cancellations;
+create policy "Users can insert related booking cancellations" on booking_cancellations for insert with check (
+  exists (
+    select 1 from bookings b
+    where b.id = booking_id and (
+      b.user_id = auth.uid() or
+      exists (select 1 from turfs t where t.id = b.turf_id and t.owner_id = auth.uid())
+    )
+  )
 );
 
 -- Policies for notifications

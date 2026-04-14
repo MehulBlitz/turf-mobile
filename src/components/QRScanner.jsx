@@ -64,14 +64,16 @@ export default function QRScanner({ onClose }) {
     return { raw: trimmedData };
   };
 
-  const buildScannedData = (booking, rawData, ownsTicket) => ({
+  const buildScannedData = (booking, rawData, ownsTicket, tokenValidated) => ({
     id: booking.id,
     turf: booking.turfs?.name,
     date: booking.start_time,
     time: `${new Date(booking.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(booking.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
     amount: booking.total_price,
     status: booking.status,
+    booking_status: booking.booking_status,
     ownsTicket,
+    tokenValidated,
     raw: rawData,
     cancellation_reason: booking.cancellation_reason,
     cancellation_notes: booking.cancellation_notes,
@@ -81,21 +83,24 @@ export default function QRScanner({ onClose }) {
 
   const lookupBooking = async (rawData) => {
     const parsed = parseBookingPayload(rawData);
+    const hasBookingId = Boolean(parsed.bookingId);
+    const hasQrToken = Boolean(parsed.qrToken);
 
     if (parsed.qrToken) {
       const booking = await fetchBookingByQrToken(parsed.qrToken);
-      if (!booking) return null;
+      if (!booking) return { booking: null, tokenValidated: false, hasBookingId, hasQrToken };
       if (parsed.bookingId && booking.id !== parsed.bookingId) {
-        return null;
+        return { booking: null, tokenValidated: false, hasBookingId, hasQrToken };
       }
-      return booking;
+      return { booking, tokenValidated: true, hasBookingId, hasQrToken };
     }
 
     if (parsed.bookingId) {
-      return await fetchBookingById(parsed.bookingId);
+      const booking = await fetchBookingById(parsed.bookingId);
+      return { booking, tokenValidated: false, hasBookingId, hasQrToken };
     }
 
-    return null;
+    return { booking: null, tokenValidated: false, hasBookingId, hasQrToken };
   };
 
   const getCodeReader = () => {
@@ -118,15 +123,17 @@ export default function QRScanner({ onClose }) {
         return;
       }
 
-      const booking = await lookupBooking(result.text);
-      if (booking) {
+      const lookupResult = await lookupBooking(result.text);
+      if (lookupResult.booking) {
         const currentUser = await supabase.auth.getUser();
-        const ownsTicket = currentUser?.data?.user?.id === booking.user_id;
-        setScannedData(buildScannedData(booking, result.text, ownsTicket));
+        const ownsTicket = currentUser?.data?.user?.id === lookupResult.booking.user_id;
+        setScannedData(buildScannedData(lookupResult.booking, result.text, ownsTicket, lookupResult.tokenValidated));
       } else {
         setScannedData({
           raw: result.text,
           id: isUuid(result.text) ? result.text : result.text.substring(0, 8),
+          tokenValidated: false,
+          tokenError: lookupResult.hasQrToken ? 'Invalid or expired QR token.' : null,
         });
       }
     } catch (err) {
@@ -212,13 +219,13 @@ export default function QRScanner({ onClose }) {
         if (result) {
           await stopLiveScan();
           const decodedText = result.getText();
-          const booking = await lookupBooking(decodedText);
-          if (booking) {
+          const lookupResult = await lookupBooking(decodedText);
+          if (lookupResult.booking) {
             const currentUser = await supabase.auth.getUser();
-            const ownsTicket = currentUser?.data?.user?.id === booking.user_id;
-            setScannedData(buildScannedData(booking, decodedText, ownsTicket));
+            const ownsTicket = currentUser?.data?.user?.id === lookupResult.booking.user_id;
+            setScannedData(buildScannedData(lookupResult.booking, decodedText, ownsTicket, lookupResult.tokenValidated));
           } else {
-            setLiveScanError('QR scanned but booking was not found.');
+            setLiveScanError(lookupResult.hasQrToken ? 'QR token is invalid or expired.' : 'QR scanned but booking was not found.');
           }
         } else if (error) {
           setLiveScanError(error.message || 'Scanning failed.');
@@ -367,15 +374,19 @@ export default function QRScanner({ onClose }) {
 
             {scannedData && (
               <div className="space-y-4">
-                <div className={`rounded-2xl p-4 flex items-start gap-3 ${scannedData.status === 'cancelled' ? 'bg-red-50 border border-red-200 text-red-700' : scannedData.status === 'pending' || scannedData.status === 'rejected' ? 'bg-yellow-50 border border-amber-200 text-amber-700' : 'bg-green-50 border-2 border-green-200 text-green-700'}`}>
+                <div className={`rounded-2xl p-4 flex items-start gap-3 ${scannedData.status === 'cancelled' || scannedData.booking_status === 'cancelled' ? 'bg-red-50 border border-red-200 text-red-700' : scannedData.status === 'pending' || scannedData.status === 'rejected' || scannedData.booking_status === 'time is gone' || !scannedData.tokenValidated ? 'bg-yellow-50 border border-amber-200 text-amber-700' : 'bg-green-50 border-2 border-green-200 text-green-700'}`}>
                   <CheckCircle2
                     size={24}
-                    className={`${scannedData.status === 'cancelled' ? 'text-red-600' : scannedData.status === 'pending' || scannedData.status === 'rejected' ? 'text-amber-600' : 'text-green-600'} flex-shrink-0 mt-1`}
+                    className={`${scannedData.status === 'cancelled' || scannedData.booking_status === 'cancelled' ? 'text-red-600' : scannedData.status === 'pending' || scannedData.status === 'rejected' || scannedData.booking_status === 'time is gone' || !scannedData.tokenValidated ? 'text-amber-600' : 'text-green-600'} flex-shrink-0 mt-1`}
                   />
                   <div>
                     <p className="font-bold">
-                      {scannedData.status === 'cancelled'
+                      {scannedData.status === 'cancelled' || scannedData.booking_status === 'cancelled'
                         ? 'Ticket Cancelled'
+                        : scannedData.booking_status === 'time is gone'
+                          ? 'Slot Time Completed'
+                          : !scannedData.tokenValidated
+                            ? 'Token Verification Failed'
                         : scannedData.status === 'rejected'
                           ? 'Ticket Rejected'
                           : scannedData.status === 'pending'
@@ -383,8 +394,12 @@ export default function QRScanner({ onClose }) {
                             : 'Ticket Scanned!'}
                     </p>
                     <p className="text-sm">
-                      {scannedData.status === 'cancelled'
+                      {scannedData.status === 'cancelled' || scannedData.booking_status === 'cancelled'
                         ? 'This booking was cancelled and the QR is no longer valid.'
+                        : scannedData.booking_status === 'time is gone'
+                          ? 'The booked slot time has already ended.'
+                          : !scannedData.tokenValidated
+                            ? 'This QR is missing a valid token and cannot be used for entry.'
                         : scannedData.status === 'rejected'
                           ? 'This booking has been rejected.'
                           : scannedData.status === 'pending'
@@ -438,30 +453,35 @@ export default function QRScanner({ onClose }) {
                   </div>
                 )}
 
-                {scannedData.status === 'cancelled' && (
+                {scannedData.status === 'cancelled' || scannedData.booking_status === 'cancelled' ? (
                   <div className="bg-red-50 rounded-xl p-4 border border-red-200 text-sm text-red-700 space-y-2">
                     <p className="font-bold">Cancelled by: {scannedData.cancelled_by || 'Unknown'}</p>
                     <p>Reason: {scannedData.cancellation_reason || scannedData.cancellation_notes || 'No reason provided'}</p>
                     <p>Refund: {formatCurrency(scannedData.refund_amount || 0)}</p>
                   </div>
-                )}
+                ) : null}
                 {scannedData.raw && (
                   <div className="bg-orange-50 rounded-xl p-3 border border-orange-200">
                     <p className="text-[10px] font-black text-orange-600 uppercase mb-2">Raw Data</p>
                     <p className="text-xs text-orange-700 break-all">{scannedData.raw}</p>
+                    {scannedData.tokenError && <p className="text-xs text-red-700 mt-2">{scannedData.tokenError}</p>}
                   </div>
                 )}
 
-                {scannedData.status === 'confirmed' ? (
+                {scannedData.status === 'confirmed' && scannedData.booking_status === 'booked' && scannedData.tokenValidated ? (
                   <div className="bg-blue-50 rounded-xl p-4 border border-blue-200 text-center">
                     <p className="text-sm font-semibold text-blue-900">✅ Ready for Check-In</p>
                     <p className="text-xs text-blue-700 mt-1">Booking verified and ready!</p>
                   </div>
                 ) : (
-                  <div className={`rounded-xl p-4 ${scannedData.status === 'cancelled' ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-yellow-50 border border-amber-200 text-amber-700'}`}>
+                  <div className={`rounded-xl p-4 ${scannedData.status === 'cancelled' || scannedData.booking_status === 'cancelled' ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-yellow-50 border border-amber-200 text-amber-700'}`}>
                     <p className="text-sm font-semibold">
-                      {scannedData.status === 'cancelled'
+                      {scannedData.status === 'cancelled' || scannedData.booking_status === 'cancelled'
                         ? 'Do not admit. Booking cancelled.'
+                        : scannedData.booking_status === 'time is gone'
+                          ? 'Do not admit. Slot time already ended.'
+                          : !scannedData.tokenValidated
+                            ? 'Do not admit. QR token validation failed.'
                         : scannedData.status === 'pending'
                           ? 'Booking not confirmed yet.'
                           : 'This ticket is invalid.'}
