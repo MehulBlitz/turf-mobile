@@ -133,6 +133,11 @@ Book your next game on TurfBook! 🏟️
     }
   };
 
+  const isCancelled = showTicket.status === 'cancelled';
+  const cancellationReason = showTicket.cancellation_reason || showTicket.cancellation_notes || 'Not provided';
+  const cancelledBy = showTicket.cancelled_by || 'Customer';
+  const refundAmount = showTicket.refund_amount || 0;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -159,6 +164,11 @@ Book your next game on TurfBook! 🏟️
             <CheckCircle2 size={32} className="text-emerald-500" />
           </div>
           <h3 className="text-xl font-black uppercase tracking-widest">Booking Confirmed</h3>
+          {isCancelled && (
+            <div className="mt-3 inline-flex items-center gap-2 px-3 py-2 rounded-full bg-red-600 text-[10px] font-black uppercase tracking-[0.3em] text-white">
+              Cancelled by {cancelledBy}
+            </div>
+          )}
           <button
             onClick={handleCopyID}
             className="text-emerald-100 text-[10px] mt-1 opacity-80 hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center gap-1 mx-auto"
@@ -194,6 +204,15 @@ Book your next game on TurfBook! 🏟️
               <p className="text-sm font-bold text-zinc-900">{showTicket.slot.start} - {showTicket.slot.end}</p>
             </div>
           </div>
+
+          {isCancelled && (
+            <div className="space-y-3 p-4 rounded-3xl bg-red-50 border border-red-100 text-red-700">
+              <p className="font-bold">This booking has been cancelled</p>
+              <p>Cancelled by: {cancelledBy}</p>
+              <p>Reason: {cancellationReason}</p>
+              <p>Refund: {formatCurrency(refundAmount)}</p>
+            </div>
+          )}
 
           {/* QR Code Section */}
           <div className="pt-4">

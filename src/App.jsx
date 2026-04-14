@@ -933,6 +933,7 @@ function AppContent() {
                   {booking.status === 'cancelled' && (
                     <div className="mt-3 px-4 py-3 rounded-3xl bg-red-50 border border-red-100 text-sm text-red-700 space-y-1">
                       <p className="font-bold">Refund: {formatCurrency(booking.refund_amount || 0)}</p>
+                      <p>Cancelled by: {booking.cancelled_by || 'Customer'}</p>
                       <p>Reason: {booking.cancellation_reason || booking.cancellation_notes || 'No reason provided'}</p>
                     </div>
                   )}

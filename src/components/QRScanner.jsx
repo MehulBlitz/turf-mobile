@@ -64,6 +64,21 @@ export default function QRScanner({ onClose }) {
     return { raw: trimmedData };
   };
 
+  const buildScannedData = (booking, rawData, ownsTicket) => ({
+    id: booking.id,
+    turf: booking.turfs?.name,
+    date: booking.start_time,
+    time: `${new Date(booking.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(booking.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+    amount: booking.total_price,
+    status: booking.status,
+    ownsTicket,
+    raw: rawData,
+    cancellation_reason: booking.cancellation_reason,
+    cancellation_notes: booking.cancellation_notes,
+    refund_amount: booking.refund_amount,
+    cancelled_by: booking.cancelled_by,
+  });
+
   const lookupBooking = async (rawData) => {
     const parsed = parseBookingPayload(rawData);
     if (parsed.qrToken) {
@@ -99,17 +114,7 @@ export default function QRScanner({ onClose }) {
       if (booking) {
         const currentUser = await supabase.auth.getUser();
         const ownsTicket = currentUser?.data?.user?.id === booking.user_id;
-
-        setScannedData({
-          id: booking.id,
-          turf: booking.turfs?.name,
-          date: booking.start_time,
-          time: `${new Date(booking.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(booking.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-          amount: booking.total_price,
-          status: booking.status,
-          ownsTicket,
-          raw: result.text,
-        });
+        setScannedData(buildScannedData(booking, result.text, ownsTicket));
       } else {
         setScannedData({
           raw: result.text,
@@ -203,16 +208,7 @@ export default function QRScanner({ onClose }) {
           if (booking) {
             const currentUser = await supabase.auth.getUser();
             const ownsTicket = currentUser?.data?.user?.id === booking.user_id;
-            setScannedData({
-              id: booking.id,
-              turf: booking.turfs?.name,
-              date: booking.start_time,
-              time: `${new Date(booking.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(booking.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-              amount: booking.total_price,
-              status: booking.status,
-              ownsTicket,
-              raw: decodedText,
-            });
+            setScannedData(buildScannedData(booking, decodedText, ownsTicket));
           } else {
             setLiveScanError('QR scanned but booking was not found.');
           }
@@ -415,6 +411,13 @@ export default function QRScanner({ onClose }) {
                   </div>
                 )}
 
+                {scannedData.status === 'cancelled' && (
+                  <div className="bg-red-50 rounded-xl p-4 border border-red-200 text-sm text-red-700 space-y-2">
+                    <p className="font-bold">Cancelled by: {scannedData.cancelled_by || 'Unknown'}</p>
+                    <p>Reason: {scannedData.cancellation_reason || scannedData.cancellation_notes || 'No reason provided'}</p>
+                    <p>Refund: {formatCurrency(scannedData.refund_amount || 0)}</p>
+                  </div>
+                )}
                 {scannedData.raw && (
                   <div className="bg-orange-50 rounded-xl p-3 border border-orange-200">
                     <p className="text-[10px] font-black text-orange-600 uppercase mb-2">Raw Data</p>

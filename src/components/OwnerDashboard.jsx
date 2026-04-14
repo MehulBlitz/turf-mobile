@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { Plus, Edit2, Trash2, Calendar, Loader2, X, Upload, Clock, Database, Camera as CameraIcon } from 'lucide-react';
 import CancellationModal from './CancellationModal';
-import { supabase } from '../lib/supabase';
+import { createNotification, supabase } from '../lib/supabase';
 import { cn, formatCurrency } from '../lib/utils';
 import { capturePhoto, pickPhotoFromGallery } from '../lib/capacitorPlugins';
 
@@ -370,6 +370,14 @@ export default function OwnerDashboard({ user, onTurfUpdate }) {
         cancelled_by: 'owner'
       }).eq('id', booking.id);
       if (error) throw error;
+      await createNotification({
+        recipient_id: booking.user_id,
+        sender_id: user.id,
+        title: 'Booking Cancelled by Owner',
+        message: `Your booking for ${booking.turfs?.name} was cancelled by the turf owner.`,
+        type: 'cancel',
+        booking_id: booking.id,
+      });
       await fetchOwnerBookings();
       setSelectedCancelBooking(null);
     } catch (err) {
