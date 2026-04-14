@@ -649,7 +649,7 @@ function AppContent() {
         .from('bookings')
         .select('status')
         .eq('id', selectedCancellation.id)
-        .single();
+        .maybeSingle();
       if (latestError) throw latestError;
       if (!latestBooking || latestBooking.status === 'cancelled' || latestBooking.status === 'rejected') {
         alert('This booking has already been cancelled or is no longer eligible for cancellation.');
@@ -671,7 +671,7 @@ function AppContent() {
         .in('status', ['pending', 'confirmed'])
         .eq('id', selectedCancellation.id)
         .select()
-        .single();
+        .maybeSingle();
       if (error) throw error;
       if (!data) {
         alert('This booking is no longer eligible for cancellation.');

@@ -142,7 +142,7 @@ export const recordBookingCancellation = async (cancellationData) => {
     .from('booking_cancellations')
     .insert(payload)
     .select()
-    .single();
+    .maybeSingle();
   handleError(error);
   return data;
 };
